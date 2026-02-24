@@ -36,30 +36,31 @@ ASR Rules Status — View all 19 ASR rules with their current state (Enabled / A
 ASR Per-Rule Exclusions — View per-rule and global ASR exclusions read from the registry (HKLM:\...\Windows Defender Exploit Guard\ASR), with filtering by rule name  
 Exploit Protection — Export and open the Exploit Protection XML configuration  
 
-Exclusions
-Defender AV Exclusions — View all configured exclusions (Path, Extension, Process, IP Address) with search and type filtering in a popup DataGrid
-Registry Key Information — Shows ManagedDefenderProductType, EnrollmentStatus, HideExclusionsFromLocalAdmins, DisableLocalAdminMerge, and determines management status with tamper protection validation (Intune-only, ConfigMgr, Co-managed scenarios)
+Exclusions  
+Defender AV Exclusions — View all configured exclusions (Path, Extension, Process, IP Address) with search and type filtering in a popup DataGrid  
+Registry Key Information — Shows ManagedDefenderProductType, EnrollmentStatus, HideExclusionsFromLocalAdmins, DisableLocalAdminMerge, and determines management status with tamper protection validation (Intune-only, ConfigMgr, Co-managed scenarios)  
 
-Updates
-Current Signature Information — AV Signature version/age/last updated, Antispyware Signature version/age, NIS Signature version
-Latest Microsoft Versions — Fetches the latest Engine, Platform, and Signature versions from Microsoft's website for comparison
-Update Actions — Trigger a signature update via MpCmdRun.exe directly from the UI
+Updates  
+Current Signature Information — AV Signature version/age/last updated, Antispyware Signature version/age, NIS Signature version  
+Latest Microsoft Versions — Fetches the latest Engine, Platform, and Signature versions from Microsoft's website for comparison  
+Update Actions — Trigger a signature update via MpCmdRun.exe directly from the UI  
 
-Logs
-SENSE Logs — View EDR sensor event logs (Microsoft-Windows-SENSE/Operational) with filtering by text and level (Information/Warning/Error), plus a detail pane for selected entries
-Defender AV Logs — View antivirus event logs (Microsoft-Windows-Windows Defender/Operational) with the same filtering and detail capabilities
-Performance
-Performance Recording — Start a Defender AV performance recording session (New-MpPerformanceRecording) that captures scan activity to an ETL file
-Performance Reports — Generate reports from ETL recordings with selectable report types: Overview, Top 10 Files, Top 10 Extensions, Top 10 Processes, Top 10 Scans (multiple reports open simultaneously in separate windows)
-Estimated Impact (MPlog) — Parse the latest MPlog file for EstimatedImpact entries, sorted by impact value, to identify high-impact scan targets
-Client Analyzer Download — Download the official Microsoft Defender Client Analyzer tool (MDEClientAnalyzer.zip) to a folder of your choice
+Logs  
+SENSE Logs — View EDR sensor event logs (Microsoft-Windows-SENSE/Operational) with filtering by text and level (Information/Warning/Error), plus a detail pane for selected entries  
+Defender AV Logs — View antivirus event logs (Microsoft-Windows-Windows Defender/Operational) with the same filtering and detail capabilities  
 
-Proxy
-Proxy Configuration — Displays the current Proxy URL and Proxy PAC configured for Defender
+Performance  
+Performance Recording — Start a Defender AV performance recording session (New-MpPerformanceRecording) that captures scan activity to an ETL file  
+Performance Reports — Generate reports from ETL recordings with selectable report types: Overview, Top 10 Files, Top 10 Extensions, Top 10 Processes, Top 10 Scans (multiple reports open simultaneously in separate windows)  
+Estimated Impact (MPlog) — Parse the latest MPlog file for EstimatedImpact entries, sorted by impact value, to identify high-impact scan targets  
+Client Analyzer Download — Download the official Microsoft Defender Client Analyzer tool (MDEClientAnalyzer.zip) to a folder of your choice  
 
-Firewall
-Profile Status — View Domain, Private, and Public firewall profile settings (Enabled, Default Inbound/Outbound Action, Log Allowed)
-Firewall Rules Browser — View all Windows Firewall rules in a filterable DataGrid with search, direction, action, enabled state, and profile filters. Shows rule name, ports, protocol, and program path
+Proxy  
+Proxy Configuration — Displays the current Proxy URL and Proxy PAC configured for Defender  
+
+Firewall  
+Profile Status — View Domain, Private, and Public firewall profile settings (Enabled, Default Inbound/Outbound Action, Log Allowed)  
+Firewall Rules Browser — View all Windows Firewall rules in a filterable DataGrid with search, direction, action, enabled state, and profile filters. Shows rule name, ports, protocol, and program path  
 
 
 # References
