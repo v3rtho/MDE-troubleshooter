@@ -1,6 +1,6 @@
 # Author: Thomas Verheyden
-# New release: 11.03.2026
-# Version: 3.1
+# New release: 27.03.2025
+# Version: 3.1.1 
 # Blogpost: https://vertho.tech/2023/06/30/tool-mde-troubleshooter-is-born/
 # Website: vertho.tech
 # Twitter: @thomasvrhydn
@@ -257,7 +257,7 @@ It offers a centralized view of the security configuration, log files, updates, 
                                     <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/></Grid.RowDefinitions>
                                     <Label Grid.Row="0" Grid.Column="0" Content="Cloud Block Level:" Style="{StaticResource HeaderLabel}"/>
                                     <Label Grid.Row="0" Grid.Column="1" Name="lblCloudBlockLevel_txt" Content="N/A" Style="{StaticResource ValueLabel}"/>
-                                    <Label Grid.Row="1" Grid.Column="0" Content="Block at First Seen:" Style="{StaticResource HeaderLabel}"/>
+                                    <Label Grid.Row="1" Grid.Column="0" Content="Block at First sight:" Style="{StaticResource HeaderLabel}"/>
                                     <Label Grid.Row="1" Grid.Column="1" Name="lblPUAProtect_text" Content="N/A" Style="{StaticResource ValueLabel}"/>
                                     <Label Grid.Row="2" Grid.Column="0" Content="Cloud Timeout:" Style="{StaticResource HeaderLabel}"/>
                                     <Label Grid.Row="2" Grid.Column="1" Name="lblCloudTimeout_text" Content="N/A" Style="{StaticResource ValueLabel}"/>
@@ -445,6 +445,14 @@ It offers a centralized view of the security configuration, log files, updates, 
                                 <Button Name="btnShowDefenderAVLogs" Content="Show Defender AV Logs" Style="{StaticResource ActionButton}" Width="200"/>
                             </WrapPanel>
                             <TextBlock Text="Note: SENSE logs show EDR sensor activity. Defender AV logs show antivirus events." TextWrapping="Wrap" Margin="0,15,0,0" FontFamily="Segoe UI" Foreground="#888" FontStyle="Italic"/>
+                            <Label Content="Security Event Exports" FontSize="14" FontWeight="Bold" Foreground="#2D2D44" Margin="0,20,0,10"/>
+                            <TextBlock Text="Export filtered Event Viewer logs for ASR and Exploit Guard events." TextWrapping="Wrap" Margin="0,0,0,15" FontFamily="Segoe UI" Foreground="#666"/>
+                            <WrapPanel>
+                                <Button Name="btnExportASRBlockEvents" Content="ASR Block Events" Style="{StaticResource ActionButton}" Width="180"/>
+                                <Button Name="btnExportASRAuditEvents" Content="Controlled Folder Access" Style="{StaticResource ActionButton}" Width="200"/>
+                                <Button Name="btnExportExploitGuardEvents" Content="Exploit Guard Events" Style="{StaticResource ActionButton}" Width="200"/>
+                            </WrapPanel>
+                            <TextBlock Text="ASR Block: EventID 1121/1122/5007 | Controlled Folder Access: EventID 1123/1124/5007 | Exploit Guard: Security-Mitigations and Win32k events." TextWrapping="Wrap" Margin="0,15,0,0" FontFamily="Segoe UI" Foreground="#888" FontStyle="Italic"/>
                         </StackPanel>
                     </Border>
                 </Grid>
@@ -2432,14 +2440,101 @@ $btnCheckForLastestUpdate.Add_Click({
 $btnShowDefenderAVLogs.Add_Click({
     try {
         $MainWindow1.Cursor = [System.Windows.Input.Cursors]::Wait
-        $DefenderLogs = Get-WinEvent -LogName "Microsoft-Windows-Windows Defender/Operational" -MaxEvents 50 -ErrorAction Stop | 
+        $DefenderLogs = Get-WinEvent -LogName "Microsoft-Windows-Windows Defender/Operational" -MaxEvents 50 -ErrorAction Stop |
             Select-Object TimeCreated, Id, LevelDisplayName, Message
         $MainWindow1.Cursor = [System.Windows.Input.Cursors]::Arrow
         Show-LogWindow -LogData $DefenderLogs -Title "Defender AV Logs" -LogType "Defender"
     }
-    catch { 
+    catch {
         $MainWindow1.Cursor = [System.Windows.Input.Cursors]::Arrow
-        [System.Windows.MessageBox]::Show($Error[0], 'Error', 'OK', 'Error') 
+        [System.Windows.MessageBox]::Show($Error[0], 'Error', 'OK', 'Error')
+    }
+})
+
+$btnExportASRBlockEvents.Add_Click({
+    try {
+        $MainWindow1.Cursor = [System.Windows.Input.Cursors]::Wait
+        $xmlQuery = @"
+<QueryList>
+  <Query Id="0" Path="Microsoft-Windows-Windows Defender/Operational">
+    <Select Path="Microsoft-Windows-Windows Defender/Operational">*[System[(EventID=1121 or EventID=1122 or EventID=5007)]]</Select>
+    <Select Path="Microsoft-Windows-Windows Defender/WHC">*[System[(EventID=1121 or EventID=1122 or EventID=5007)]]</Select>
+  </Query>
+</QueryList>
+"@
+        $logs = Get-WinEvent -FilterXml $xmlQuery -ErrorAction Stop |
+            Select-Object TimeCreated, Id, LevelDisplayName, Message
+        $MainWindow1.Cursor = [System.Windows.Input.Cursors]::Arrow
+        if ($logs.Count -eq 0) {
+            [System.Windows.MessageBox]::Show("No ASR Block events (1121/1122/5007) found.", 'ASR Block Events', 'OK', 'Information')
+        } else {
+            Show-LogWindow -LogData $logs -Title "ASR Block Events (1121/1122/5007)" -LogType "Defender"
+        }
+    }
+    catch {
+        $MainWindow1.Cursor = [System.Windows.Input.Cursors]::Arrow
+        [System.Windows.MessageBox]::Show($Error[0], 'Error', 'OK', 'Error')
+    }
+})
+
+$btnExportASRAuditEvents.Add_Click({
+    try {
+        $MainWindow1.Cursor = [System.Windows.Input.Cursors]::Wait
+        $xmlQuery = @"
+<QueryList>
+  <Query Id="0" Path="Microsoft-Windows-Windows Defender/Operational">
+    <Select Path="Microsoft-Windows-Windows Defender/Operational">*[System[(EventID=1123 or EventID=1124 or EventID=5007)]]</Select>
+    <Select Path="Microsoft-Windows-Windows Defender/WHC">*[System[(EventID=1123 or EventID=1124 or EventID=5007)]]</Select>
+  </Query>
+</QueryList>
+"@
+        $logs = Get-WinEvent -FilterXml $xmlQuery -ErrorAction Stop |
+            Select-Object TimeCreated, Id, LevelDisplayName, Message
+        $MainWindow1.Cursor = [System.Windows.Input.Cursors]::Arrow
+        if ($logs.Count -eq 0) {
+            [System.Windows.MessageBox]::Show("No Controlled Folder Access events (1123/1124/5007) found.", 'Controlled Folder Access', 'OK', 'Information')
+        } else {
+            Show-LogWindow -LogData $logs -Title "Controlled Folder Access Events (1123/1124/5007)" -LogType "Defender"
+        }
+    }
+    catch {
+        $MainWindow1.Cursor = [System.Windows.Input.Cursors]::Arrow
+        [System.Windows.MessageBox]::Show($Error[0], 'Error', 'OK', 'Error')
+    }
+})
+
+$btnExportExploitGuardEvents.Add_Click({
+    try {
+        $MainWindow1.Cursor = [System.Windows.Input.Cursors]::Wait
+        $xmlQuery = @"
+<QueryList>
+  <Query Id="0" Path="Microsoft-Windows-Security-Mitigations/KernelMode">
+    <Select Path="Microsoft-Windows-Security-Mitigations/KernelMode">*[System[Provider[@Name='Microsoft-Windows-Security-Mitigations' or @Name='Microsoft-Windows-WER-Diag' or @Name='Microsoft-Windows-Win32k' or @Name='Win32k'] and ( (EventID &gt;= 1 and EventID &lt;= 24) or EventID=5 or EventID=260)]]</Select>
+    <Select Path="Microsoft-Windows-Win32k/Concurrency">*[System[Provider[@Name='Microsoft-Windows-Security-Mitigations' or @Name='Microsoft-Windows-WER-Diag' or @Name='Microsoft-Windows-Win32k' or @Name='Win32k'] and ( (EventID &gt;= 1 and EventID &lt;= 24) or EventID=5 or EventID=260)]]</Select>
+    <Select Path="Microsoft-Windows-Win32k/Contention">*[System[Provider[@Name='Microsoft-Windows-Security-Mitigations' or @Name='Microsoft-Windows-WER-Diag' or @Name='Microsoft-Windows-Win32k' or @Name='Win32k'] and ( (EventID &gt;= 1 and EventID &lt;= 24) or EventID=5 or EventID=260)]]</Select>
+    <Select Path="Microsoft-Windows-Win32k/Messages">*[System[Provider[@Name='Microsoft-Windows-Security-Mitigations' or @Name='Microsoft-Windows-WER-Diag' or @Name='Microsoft-Windows-Win32k' or @Name='Win32k'] and ( (EventID &gt;= 1 and EventID &lt;= 24) or EventID=5 or EventID=260)]]</Select>
+    <Select Path="Microsoft-Windows-Win32k/Operational">*[System[Provider[@Name='Microsoft-Windows-Security-Mitigations' or @Name='Microsoft-Windows-WER-Diag' or @Name='Microsoft-Windows-Win32k' or @Name='Win32k'] and ( (EventID &gt;= 1 and EventID &lt;= 24) or EventID=5 or EventID=260)]]</Select>
+    <Select Path="Microsoft-Windows-Win32k/Power">*[System[Provider[@Name='Microsoft-Windows-Security-Mitigations' or @Name='Microsoft-Windows-WER-Diag' or @Name='Microsoft-Windows-Win32k' or @Name='Win32k'] and ( (EventID &gt;= 1 and EventID &lt;= 24) or EventID=5 or EventID=260)]]</Select>
+    <Select Path="Microsoft-Windows-Win32k/Render">*[System[Provider[@Name='Microsoft-Windows-Security-Mitigations' or @Name='Microsoft-Windows-WER-Diag' or @Name='Microsoft-Windows-Win32k' or @Name='Win32k'] and ( (EventID &gt;= 1 and EventID &lt;= 24) or EventID=5 or EventID=260)]]</Select>
+    <Select Path="Microsoft-Windows-Win32k/Tracing">*[System[Provider[@Name='Microsoft-Windows-Security-Mitigations' or @Name='Microsoft-Windows-WER-Diag' or @Name='Microsoft-Windows-Win32k' or @Name='Win32k'] and ( (EventID &gt;= 1 and EventID &lt;= 24) or EventID=5 or EventID=260)]]</Select>
+    <Select Path="Microsoft-Windows-Win32k/UIPI">*[System[Provider[@Name='Microsoft-Windows-Security-Mitigations' or @Name='Microsoft-Windows-WER-Diag' or @Name='Microsoft-Windows-Win32k' or @Name='Win32k'] and ( (EventID &gt;= 1 and EventID &lt;= 24) or EventID=5 or EventID=260)]]</Select>
+    <Select Path="System">*[System[Provider[@Name='Microsoft-Windows-Security-Mitigations' or @Name='Microsoft-Windows-WER-Diag' or @Name='Microsoft-Windows-Win32k' or @Name='Win32k'] and ( (EventID &gt;= 1 and EventID &lt;= 24) or EventID=5 or EventID=260)]]</Select>
+    <Select Path="Microsoft-Windows-Security-Mitigations/UserMode">*[System[Provider[@Name='Microsoft-Windows-Security-Mitigations' or @Name='Microsoft-Windows-WER-Diag' or @Name='Microsoft-Windows-Win32k' or @Name='Win32k'] and ( (EventID &gt;= 1 and EventID &lt;= 24) or EventID=5 or EventID=260)]]</Select>
+  </Query>
+</QueryList>
+"@
+        $logs = Get-WinEvent -FilterXml $xmlQuery -Oldest -ErrorAction Stop |
+            Select-Object TimeCreated, Id, LevelDisplayName, Message
+        $MainWindow1.Cursor = [System.Windows.Input.Cursors]::Arrow
+        if ($logs.Count -eq 0) {
+            [System.Windows.MessageBox]::Show("No Exploit Guard protection events found.", 'Exploit Guard Events', 'OK', 'Information')
+        } else {
+            Show-LogWindow -LogData $logs -Title "Exploit Guard Protection Events" -LogType "Defender"
+        }
+    }
+    catch {
+        $MainWindow1.Cursor = [System.Windows.Input.Cursors]::Arrow
+        [System.Windows.MessageBox]::Show($Error[0], 'Error', 'OK', 'Error')
     }
 })
 
