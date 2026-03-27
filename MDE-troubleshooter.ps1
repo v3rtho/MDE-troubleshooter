@@ -1,6 +1,6 @@
 # Author: Thomas Verheyden
 # New release: 27.03.2025
-# Version: 3.1.1 
+# Version: 3.1.0
 # Blogpost: https://vertho.tech/2023/06/30/tool-mde-troubleshooter-is-born/
 # Website: vertho.tech
 # Twitter: @thomasvrhydn
@@ -363,6 +363,7 @@ It offers a centralized view of the security configuration, log files, updates, 
                                     <RowDefinition Height="Auto"/>
                                     <RowDefinition Height="Auto"/>
                                     <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="Auto"/>
                                 </Grid.RowDefinitions>
                                 <Label Grid.Row="0" Grid.Column="0" Content="ManagedDefenderProductType:" Style="{StaticResource HeaderLabel}"/>
                                 <Label Grid.Row="0" Grid.Column="1" Name="lblManagedDefenderProductType" Content="N/A" Style="{StaticResource ValueLabel}"/>
@@ -372,8 +373,11 @@ It offers a centralized view of the security configuration, log files, updates, 
                                 <Label Grid.Row="2" Grid.Column="1" Name="lblHideExclusionsFromLocalAdmins" Content="N/A" Style="{StaticResource ValueLabel}"/>
                                 <Label Grid.Row="3" Grid.Column="0" Content="DisableLocalAdminMerge:" Style="{StaticResource HeaderLabel}"/>
                                 <Label Grid.Row="3" Grid.Column="1" Name="lblDisableLocalAdminMerge" Content="N/A" Style="{StaticResource ValueLabel}"/>
+                                <Label Grid.Row="4" Grid.Column="0" Content="TPExclusions:" Style="{StaticResource HeaderLabel}"/>
+                                <Label Grid.Row="4" Grid.Column="1" Name="lblTPExclusions" Content="N/A" Style="{StaticResource ValueLabel}"/>
                             </Grid>
-                            <TextBlock Name="txtManagementStatus" Text="N/A" TextWrapping="Wrap" Margin="0,10,0,0" FontFamily="Segoe UI" FontSize="12" FontWeight="Bold" Foreground="#666"/>
+                            <TextBlock Text="TPExclusions is located at HKLM\SOFTWARE\Microsoft\Windows Defender\Features. Value 1 = Exclusions are tamper protected. Value 0 = Tamper protection is not currently protecting exclusions." TextWrapping="Wrap" Margin="0,10,0,5" FontFamily="Segoe UI" FontSize="11" Foreground="#888" FontStyle="Italic"/>
+                            <TextBlock Name="txtManagementStatus" Text="N/A" TextWrapping="Wrap" Margin="0,5,0,0" FontFamily="Segoe UI" FontSize="12" FontWeight="Bold" Foreground="#666"/>
                         </StackPanel>
                     </Border>
                 </Grid>
@@ -860,6 +864,26 @@ Function LoadRegistryKeys {
     } catch {
         $lblHideExclusionsFromLocalAdmins.Content = "Not Configured"
         $lblHideExclusionsFromLocalAdmins.Foreground = "#FF888888"
+    }
+
+    # TPExclusions
+    try {
+        $tpExclusionsValue = Get-ItemProperty -Path "HKLM:\SOFTWARE\Microsoft\Windows Defender\Features" -Name "TPExclusions" -ErrorAction SilentlyContinue
+        if ($null -ne $tpExclusionsValue) {
+            if ($tpExclusionsValue.TPExclusions -eq 1) {
+                $lblTPExclusions.Content = "1 - Exclusions are tamper protected"
+                $lblTPExclusions.Foreground = "#FF008000"
+            } else {
+                $lblTPExclusions.Content = "0 - Tamper protection not protecting exclusions"
+                $lblTPExclusions.Foreground = "#FFFF8C00"
+            }
+        } else {
+            $lblTPExclusions.Content = "Not Found"
+            $lblTPExclusions.Foreground = "#FF888888"
+        }
+    } catch {
+        $lblTPExclusions.Content = "Error reading registry"
+        $lblTPExclusions.Foreground = "#FFFF0000"
     }
 
     # Determine management status based on the table
