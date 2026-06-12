@@ -1450,7 +1450,7 @@ Function PerformanceReport {
 
                 if ($rdbTopfiles.IsChecked -eq $true) {
                     if ($PerformanceReport.TopFiles) {
-                        $flat = $PerformanceReport.TopFiles | Select-Object @{N='Path';E={$_.Path}}, @{N='ScanCount';E={$_.ScanCount}}, @{N='TotalDuration_ms';E={[math]::Round($_.ScanDuration.TotalMilliseconds)}}, @{N='AvgDuration_ms';E={if($_.ScanCount){[math]::Round($_.ScanDuration.TotalMilliseconds/$_.ScanCount)}else{0}}}
+                        $flat = $PerformanceReport.TopFiles | Select-Object @{N='Path';E={$_.Path}}, @{N='Count';E={$_.Count}}, @{N='TotalDuration_ms';E={[math]::Round($_.TotalDuration.TotalMilliseconds)}}, @{N='MinDuration_ms';E={[math]::Round($_.MinDuration.TotalMilliseconds)}}, @{N='AverageDuration_ms';E={[math]::Round($_.AverageDuration.TotalMilliseconds)}}, @{N='MaxDuration_ms';E={[math]::Round($_.MaxDuration.TotalMilliseconds)}}, @{N='MedianDuration_ms';E={[math]::Round($_.MedianDuration.TotalMilliseconds)}}
                         $reportsToOpen += @{Data = $flat; Title = "Performance Report - Top Files Scans"}
                     } else {
                         $missingReports += "Top Files"
@@ -1459,7 +1459,7 @@ Function PerformanceReport {
 
                 if ($rdbTopExtensions.IsChecked -eq $true) {
                     if ($PerformanceReport.TopExtensions) {
-                        $flat = $PerformanceReport.TopExtensions | Select-Object @{N='Extension';E={$_.Extension}}, @{N='ScanCount';E={$_.ScanCount}}, @{N='TotalDuration_ms';E={[math]::Round($_.ScanDuration.TotalMilliseconds)}}, @{N='AvgDuration_ms';E={if($_.ScanCount){[math]::Round($_.ScanDuration.TotalMilliseconds/$_.ScanCount)}else{0}}}
+                        $flat = $PerformanceReport.TopExtensions | Select-Object @{N='Extension';E={$_.Extension}}, @{N='Count';E={$_.Count}}, @{N='TotalDuration_ms';E={[math]::Round($_.TotalDuration.TotalMilliseconds)}}, @{N='MinDuration_ms';E={[math]::Round($_.MinDuration.TotalMilliseconds)}}, @{N='AverageDuration_ms';E={[math]::Round($_.AverageDuration.TotalMilliseconds)}}, @{N='MaxDuration_ms';E={[math]::Round($_.MaxDuration.TotalMilliseconds)}}, @{N='MedianDuration_ms';E={[math]::Round($_.MedianDuration.TotalMilliseconds)}}
                         $reportsToOpen += @{Data = $flat; Title = "Performance Report - Top Extensions Scans"}
                     } else {
                         $missingReports += "Top Extensions"
@@ -1468,7 +1468,7 @@ Function PerformanceReport {
 
                 if ($rdbTopProcess.IsChecked -eq $true) {
                     if ($PerformanceReport.TopProcesses) {
-                        $flat = $PerformanceReport.TopProcesses | Select-Object @{N='Process';E={$_.ProcessPath}}, @{N='ScanCount';E={$_.ScanCount}}, @{N='TotalDuration_ms';E={[math]::Round($_.ScanDuration.TotalMilliseconds)}}, @{N='AvgDuration_ms';E={if($_.ScanCount){[math]::Round($_.ScanDuration.TotalMilliseconds/$_.ScanCount)}else{0}}}
+                        $flat = $PerformanceReport.TopProcesses | Select-Object @{N='ProcessPath';E={$_.ProcessPath}}, @{N='Count';E={$_.Count}}, @{N='TotalDuration_ms';E={[math]::Round($_.TotalDuration.TotalMilliseconds)}}, @{N='MinDuration_ms';E={[math]::Round($_.MinDuration.TotalMilliseconds)}}, @{N='AverageDuration_ms';E={[math]::Round($_.AverageDuration.TotalMilliseconds)}}, @{N='MaxDuration_ms';E={[math]::Round($_.MaxDuration.TotalMilliseconds)}}, @{N='MedianDuration_ms';E={[math]::Round($_.MedianDuration.TotalMilliseconds)}}
                         $reportsToOpen += @{Data = $flat; Title = "Performance Report - Top Processes Scans"}
                     } else {
                         $missingReports += "Top Processes"
@@ -1477,7 +1477,7 @@ Function PerformanceReport {
 
                 if ($rdbTopScans.IsChecked -eq $true) {
                     if ($PerformanceReport.TopScans) {
-                        $flat = $PerformanceReport.TopScans | Select-Object @{N='Path';E={$_.Path}}, @{N='Duration_ms';E={[math]::Round($_.ScanDuration.TotalMilliseconds)}}, @{N='StartTime';E={$_.StartTime}}, @{N='ScanReason';E={$_.ScanReason}}
+                        $flat = $PerformanceReport.TopScans | Select-Object @{N='ScanType';E={$_.ScanType}}, @{N='SkipReason';E={$_.SkipReason}}, @{N='Comments';E={$_.Comments}}, @{N='Path';E={$_.Path}}, @{N='Duration_ms';E={[math]::Round($_.ScanDuration.TotalMilliseconds)}}, @{N='StartTime';E={$_.StartTime}}, @{N='ScanReason';E={$_.ScanReason}}
                         $reportsToOpen += @{Data = $flat; Title = "Performance Report - Top Scans"}
                     } else {
                         $missingReports += "Top Scans"
@@ -2815,7 +2815,7 @@ $btnShowPerformanceReport.Add_Click({
 
                 if ($rdbTopfiles.IsChecked -eq $true) {
                     if ($PerformanceReport.TopFiles) {
-                        $flat = $PerformanceReport.TopFiles | Select-Object @{N='Path';E={$_.Path}}, @{N='ScanCount';E={$_.ScanCount}}, @{N='TotalDuration_ms';E={[math]::Round($_.ScanDuration.TotalMilliseconds)}}, @{N='AvgDuration_ms';E={if($_.ScanCount){[math]::Round($_.ScanDuration.TotalMilliseconds/$_.ScanCount)}else{0}}}
+                        $flat = $PerformanceReport.TopFiles | Select-Object @{N='Path';E={$_.Path}}, @{N='Count';E={$_.Count}}, @{N='TotalDuration_ms';E={[math]::Round($_.TotalDuration.TotalMilliseconds)}}, @{N='MinDuration_ms';E={[math]::Round($_.MinDuration.TotalMilliseconds)}}, @{N='AverageDuration_ms';E={[math]::Round($_.AverageDuration.TotalMilliseconds)}}, @{N='MaxDuration_ms';E={[math]::Round($_.MaxDuration.TotalMilliseconds)}}, @{N='MedianDuration_ms';E={[math]::Round($_.MedianDuration.TotalMilliseconds)}}
                         $reportsToOpen += @{Data = $flat; Title = "Performance Report - Top Files Scans"}
                     } else {
                         $missingReports += "Top Files"
@@ -2824,7 +2824,7 @@ $btnShowPerformanceReport.Add_Click({
 
                 if ($rdbTopExtensions.IsChecked -eq $true) {
                     if ($PerformanceReport.TopExtensions) {
-                        $flat = $PerformanceReport.TopExtensions | Select-Object @{N='Extension';E={$_.Extension}}, @{N='ScanCount';E={$_.ScanCount}}, @{N='TotalDuration_ms';E={[math]::Round($_.ScanDuration.TotalMilliseconds)}}, @{N='AvgDuration_ms';E={if($_.ScanCount){[math]::Round($_.ScanDuration.TotalMilliseconds/$_.ScanCount)}else{0}}}
+                        $flat = $PerformanceReport.TopExtensions | Select-Object @{N='Extension';E={$_.Extension}}, @{N='Count';E={$_.Count}}, @{N='TotalDuration_ms';E={[math]::Round($_.TotalDuration.TotalMilliseconds)}}, @{N='MinDuration_ms';E={[math]::Round($_.MinDuration.TotalMilliseconds)}}, @{N='AverageDuration_ms';E={[math]::Round($_.AverageDuration.TotalMilliseconds)}}, @{N='MaxDuration_ms';E={[math]::Round($_.MaxDuration.TotalMilliseconds)}}, @{N='MedianDuration_ms';E={[math]::Round($_.MedianDuration.TotalMilliseconds)}}
                         $reportsToOpen += @{Data = $flat; Title = "Performance Report - Top Extensions Scans"}
                     } else {
                         $missingReports += "Top Extensions"
@@ -2833,7 +2833,7 @@ $btnShowPerformanceReport.Add_Click({
 
                 if ($rdbTopProcess.IsChecked -eq $true) {
                     if ($PerformanceReport.TopProcesses) {
-                        $flat = $PerformanceReport.TopProcesses | Select-Object @{N='Process';E={$_.ProcessPath}}, @{N='ScanCount';E={$_.ScanCount}}, @{N='TotalDuration_ms';E={[math]::Round($_.ScanDuration.TotalMilliseconds)}}, @{N='AvgDuration_ms';E={if($_.ScanCount){[math]::Round($_.ScanDuration.TotalMilliseconds/$_.ScanCount)}else{0}}}
+                        $flat = $PerformanceReport.TopProcesses | Select-Object @{N='ProcessPath';E={$_.ProcessPath}}, @{N='Count';E={$_.Count}}, @{N='TotalDuration_ms';E={[math]::Round($_.TotalDuration.TotalMilliseconds)}}, @{N='MinDuration_ms';E={[math]::Round($_.MinDuration.TotalMilliseconds)}}, @{N='AverageDuration_ms';E={[math]::Round($_.AverageDuration.TotalMilliseconds)}}, @{N='MaxDuration_ms';E={[math]::Round($_.MaxDuration.TotalMilliseconds)}}, @{N='MedianDuration_ms';E={[math]::Round($_.MedianDuration.TotalMilliseconds)}}
                         $reportsToOpen += @{Data = $flat; Title = "Performance Report - Top Processes Scans"}
                     } else {
                         $missingReports += "Top Processes"
@@ -2842,7 +2842,7 @@ $btnShowPerformanceReport.Add_Click({
 
                 if ($rdbTopScans.IsChecked -eq $true) {
                     if ($PerformanceReport.TopScans) {
-                        $flat = $PerformanceReport.TopScans | Select-Object @{N='Path';E={$_.Path}}, @{N='Duration_ms';E={[math]::Round($_.ScanDuration.TotalMilliseconds)}}, @{N='StartTime';E={$_.StartTime}}, @{N='ScanReason';E={$_.ScanReason}}
+                        $flat = $PerformanceReport.TopScans | Select-Object @{N='ScanType';E={$_.ScanType}}, @{N='SkipReason';E={$_.SkipReason}}, @{N='Comments';E={$_.Comments}}, @{N='Path';E={$_.Path}}, @{N='Duration_ms';E={[math]::Round($_.ScanDuration.TotalMilliseconds)}}, @{N='StartTime';E={$_.StartTime}}, @{N='ScanReason';E={$_.ScanReason}}
                         $reportsToOpen += @{Data = $flat; Title = "Performance Report - Top Scans"}
                     } else {
                         $missingReports += "Top Scans"
