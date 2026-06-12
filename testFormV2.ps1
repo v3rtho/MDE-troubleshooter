@@ -1,5 +1,5 @@
 # Author: Thomas Verheyden
-# New release: 27.03.2025
+# New release: 12.06.2025
 # Version: 3.1.0
 # Blogpost: https://vertho.tech/2023/06/30/tool-mde-troubleshooter-is-born/
 # Website: vertho.tech
@@ -616,10 +616,19 @@ It offers a centralized view of the security configuration, log files, updates, 
                         <Grid.RowDefinitions>
                             <RowDefinition Height="Auto"/>
                             <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
                         </Grid.RowDefinitions>
 
+                        <!-- Refresh bar -->
+                        <Border Grid.Row="0" Background="#F0F0F0" BorderBrush="#DDD" BorderThickness="1" CornerRadius="5" Padding="10,8" Margin="10,10,10,0">
+                            <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                <Button Name="btnRefreshTSMode" Content="&#x1F504;  Refresh Get-MpComputerStatus" Style="{StaticResource ActionButton}" Margin="0,0,10,0"/>
+                                <TextBlock Name="lblTSRefreshTime" Text="" FontFamily="Segoe UI" FontSize="11" Foreground="#888" VerticalAlignment="Center"/>
+                            </StackPanel>
+                        </Border>
+
                         <!-- Troubleshooting Mode Status -->
-                        <Border Grid.Row="0" Style="{StaticResource SectionBorder}">
+                        <Border Grid.Row="1" Style="{StaticResource SectionBorder}">
                             <StackPanel>
                                 <Label Content="Troubleshooting Mode Status" FontSize="14" FontWeight="Bold" Foreground="#E8E8E8" Margin="0,0,0,10"/>
                                 <Grid>
@@ -661,7 +670,7 @@ It offers a centralized view of the security configuration, log files, updates, 
                         </Border>
 
                         <!-- Tamper Protection -->
-                        <Border Grid.Row="1" Style="{StaticResource SectionBorder}">
+                        <Border Grid.Row="2" Style="{StaticResource SectionBorder}">
                             <StackPanel>
                                 <Label Content="Tamper Protection" FontSize="14" FontWeight="Bold" Foreground="#E8E8E8" Margin="0,0,0,10"/>
                                 <TextBlock Text="Disable Tamper Protection on this device. This allows policy changes that would otherwise be blocked. Use only for troubleshooting purposes." TextWrapping="Wrap" Margin="0,0,0,15" FontFamily="Segoe UI" Foreground="#666"/>
@@ -1441,7 +1450,8 @@ Function PerformanceReport {
 
                 if ($rdbTopfiles.IsChecked -eq $true) {
                     if ($PerformanceReport.TopFiles) {
-                        $reportsToOpen += @{Data = $PerformanceReport.TopFiles; Title = "Performance Report - Top Files Scans"}
+                        $flat = $PerformanceReport.TopFiles | Select-Object @{N='Path';E={$_.Path}}, @{N='ScanCount';E={$_.ScanCount}}, @{N='TotalDuration_ms';E={[math]::Round($_.ScanDuration.TotalMilliseconds)}}, @{N='AvgDuration_ms';E={if($_.ScanCount){[math]::Round($_.ScanDuration.TotalMilliseconds/$_.ScanCount)}else{0}}}
+                        $reportsToOpen += @{Data = $flat; Title = "Performance Report - Top Files Scans"}
                     } else {
                         $missingReports += "Top Files"
                     }
@@ -1449,7 +1459,8 @@ Function PerformanceReport {
 
                 if ($rdbTopExtensions.IsChecked -eq $true) {
                     if ($PerformanceReport.TopExtensions) {
-                        $reportsToOpen += @{Data = $PerformanceReport.TopExtensions; Title = "Performance Report - Top Extensions Scans"}
+                        $flat = $PerformanceReport.TopExtensions | Select-Object @{N='Extension';E={$_.Extension}}, @{N='ScanCount';E={$_.ScanCount}}, @{N='TotalDuration_ms';E={[math]::Round($_.ScanDuration.TotalMilliseconds)}}, @{N='AvgDuration_ms';E={if($_.ScanCount){[math]::Round($_.ScanDuration.TotalMilliseconds/$_.ScanCount)}else{0}}}
+                        $reportsToOpen += @{Data = $flat; Title = "Performance Report - Top Extensions Scans"}
                     } else {
                         $missingReports += "Top Extensions"
                     }
@@ -1457,7 +1468,8 @@ Function PerformanceReport {
 
                 if ($rdbTopProcess.IsChecked -eq $true) {
                     if ($PerformanceReport.TopProcesses) {
-                        $reportsToOpen += @{Data = $PerformanceReport.TopProcesses; Title = "Performance Report - Top Processes Scans"}
+                        $flat = $PerformanceReport.TopProcesses | Select-Object @{N='Process';E={$_.ProcessPath}}, @{N='ScanCount';E={$_.ScanCount}}, @{N='TotalDuration_ms';E={[math]::Round($_.ScanDuration.TotalMilliseconds)}}, @{N='AvgDuration_ms';E={if($_.ScanCount){[math]::Round($_.ScanDuration.TotalMilliseconds/$_.ScanCount)}else{0}}}
+                        $reportsToOpen += @{Data = $flat; Title = "Performance Report - Top Processes Scans"}
                     } else {
                         $missingReports += "Top Processes"
                     }
@@ -1465,7 +1477,8 @@ Function PerformanceReport {
 
                 if ($rdbTopScans.IsChecked -eq $true) {
                     if ($PerformanceReport.TopScans) {
-                        $reportsToOpen += @{Data = $PerformanceReport.TopScans; Title = "Performance Report - Top Scans"}
+                        $flat = $PerformanceReport.TopScans | Select-Object @{N='Path';E={$_.Path}}, @{N='Duration_ms';E={[math]::Round($_.ScanDuration.TotalMilliseconds)}}, @{N='StartTime';E={$_.StartTime}}, @{N='ScanReason';E={$_.ScanReason}}
+                        $reportsToOpen += @{Data = $flat; Title = "Performance Report - Top Scans"}
                     } else {
                         $missingReports += "Top Scans"
                     }
@@ -2802,7 +2815,8 @@ $btnShowPerformanceReport.Add_Click({
 
                 if ($rdbTopfiles.IsChecked -eq $true) {
                     if ($PerformanceReport.TopFiles) {
-                        $reportsToOpen += @{Data = $PerformanceReport.TopFiles; Title = "Performance Report - Top Files Scans"}
+                        $flat = $PerformanceReport.TopFiles | Select-Object @{N='Path';E={$_.Path}}, @{N='ScanCount';E={$_.ScanCount}}, @{N='TotalDuration_ms';E={[math]::Round($_.ScanDuration.TotalMilliseconds)}}, @{N='AvgDuration_ms';E={if($_.ScanCount){[math]::Round($_.ScanDuration.TotalMilliseconds/$_.ScanCount)}else{0}}}
+                        $reportsToOpen += @{Data = $flat; Title = "Performance Report - Top Files Scans"}
                     } else {
                         $missingReports += "Top Files"
                     }
@@ -2810,7 +2824,8 @@ $btnShowPerformanceReport.Add_Click({
 
                 if ($rdbTopExtensions.IsChecked -eq $true) {
                     if ($PerformanceReport.TopExtensions) {
-                        $reportsToOpen += @{Data = $PerformanceReport.TopExtensions; Title = "Performance Report - Top Extensions Scans"}
+                        $flat = $PerformanceReport.TopExtensions | Select-Object @{N='Extension';E={$_.Extension}}, @{N='ScanCount';E={$_.ScanCount}}, @{N='TotalDuration_ms';E={[math]::Round($_.ScanDuration.TotalMilliseconds)}}, @{N='AvgDuration_ms';E={if($_.ScanCount){[math]::Round($_.ScanDuration.TotalMilliseconds/$_.ScanCount)}else{0}}}
+                        $reportsToOpen += @{Data = $flat; Title = "Performance Report - Top Extensions Scans"}
                     } else {
                         $missingReports += "Top Extensions"
                     }
@@ -2818,7 +2833,8 @@ $btnShowPerformanceReport.Add_Click({
 
                 if ($rdbTopProcess.IsChecked -eq $true) {
                     if ($PerformanceReport.TopProcesses) {
-                        $reportsToOpen += @{Data = $PerformanceReport.TopProcesses; Title = "Performance Report - Top Processes Scans"}
+                        $flat = $PerformanceReport.TopProcesses | Select-Object @{N='Process';E={$_.ProcessPath}}, @{N='ScanCount';E={$_.ScanCount}}, @{N='TotalDuration_ms';E={[math]::Round($_.ScanDuration.TotalMilliseconds)}}, @{N='AvgDuration_ms';E={if($_.ScanCount){[math]::Round($_.ScanDuration.TotalMilliseconds/$_.ScanCount)}else{0}}}
+                        $reportsToOpen += @{Data = $flat; Title = "Performance Report - Top Processes Scans"}
                     } else {
                         $missingReports += "Top Processes"
                     }
@@ -2826,7 +2842,8 @@ $btnShowPerformanceReport.Add_Click({
 
                 if ($rdbTopScans.IsChecked -eq $true) {
                     if ($PerformanceReport.TopScans) {
-                        $reportsToOpen += @{Data = $PerformanceReport.TopScans; Title = "Performance Report - Top Scans"}
+                        $flat = $PerformanceReport.TopScans | Select-Object @{N='Path';E={$_.Path}}, @{N='Duration_ms';E={[math]::Round($_.ScanDuration.TotalMilliseconds)}}, @{N='StartTime';E={$_.StartTime}}, @{N='ScanReason';E={$_.ScanReason}}
+                        $reportsToOpen += @{Data = $flat; Title = "Performance Report - Top Scans"}
                     } else {
                         $missingReports += "Top Scans"
                     }
@@ -3229,6 +3246,26 @@ $btnShowFirewallLogs.Add_Click({
 })
 
 # ==================== TROUBLESHOOTING EVENT HANDLERS ====================
+
+$btnRefreshTSMode.Add_Click({
+    $MainWindow1.Cursor = [System.Windows.Input.Cursors]::Wait
+    try {
+        $MPComputerstatus = Get-MpComputerStatus
+        $lblTSTamperSource.Content    = if ($MPComputerstatus.PSObject.Properties['TamperProtectionSource'])           { $MPComputerstatus.TamperProtectionSource }           else { "N/A" }
+        $lblTSMode.Content            = if ($MPComputerstatus.PSObject.Properties['TroubleShootingMode'])              { $MPComputerstatus.TroubleShootingMode }              else { "N/A" }
+        $lblTSModeSource.Content      = if ($MPComputerstatus.PSObject.Properties['TroubleShootingModeSource'])        { $MPComputerstatus.TroubleShootingModeSource }        else { "N/A" }
+        $lblTSStartTime.Content       = if ($MPComputerstatus.PSObject.Properties['TroubleShootingStartTime'])         { $MPComputerstatus.TroubleShootingStartTime }         else { "N/A" }
+        $lblTSEndTime.Content         = if ($MPComputerstatus.PSObject.Properties['TroubleShootingEndTime'])           { $MPComputerstatus.TroubleShootingEndTime }           else { "N/A" }
+        $lblTSExpirationLeft.Content  = if ($MPComputerstatus.PSObject.Properties['TroubleShootingExpirationLeft'])    { $MPComputerstatus.TroubleShootingExpirationLeft }    else { "N/A" }
+        $lblTSDailyMaxQuota.Content   = if ($MPComputerstatus.PSObject.Properties['TroubleShootingDailyMaxQuota'])     { $MPComputerstatus.TroubleShootingDailyMaxQuota }     else { "N/A" }
+        $lblTSDailyQuotaLeft.Content  = if ($MPComputerstatus.PSObject.Properties['TroubleShootingDailyQuotaLeft'])    { $MPComputerstatus.TroubleShootingDailyQuotaLeft }    else { "N/A" }
+        $lblTSQuotaResetTime.Content  = if ($MPComputerstatus.PSObject.Properties['TroubleShootingQuotaResetTime'])    { $MPComputerstatus.TroubleShootingQuotaResetTime }    else { "N/A" }
+        $lblTSRefreshTime.Text = "Last refreshed: $(Get-Date -Format 'HH:mm:ss')"
+    } catch {
+        [System.Windows.MessageBox]::Show($Error[0], 'Refresh Error', 'OK', 'Error')
+    }
+    $MainWindow1.Cursor = [System.Windows.Input.Cursors]::Arrow
+})
 
 $btnDisableTamperProtection.Add_Click({
     $confirm = [System.Windows.MessageBox]::Show(
