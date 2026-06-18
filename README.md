@@ -20,7 +20,7 @@ A PowerShell WPF GUI tool for analyzing and troubleshooting Microsoft Defender f
 
 ```powershell
 # Run as Administrator
-powershell.exe -ExecutionPolicy Bypass -File .\testFormV2.ps1
+powershell.exe -ExecutionPolicy Bypass -File .\MDE-Troubleshooter.ps1
 ```
 
 Or right-click the script and select **Run with PowerShell** (as Administrator).
