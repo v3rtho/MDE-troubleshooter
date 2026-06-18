@@ -146,7 +146,15 @@ It offers a centralized view of the security configuration, log files, updates, 
                 
                 <!-- Panel 1: Defender AV -->
                 <ScrollViewer Name="panelDefenderAV" VerticalScrollBarVisibility="Auto" Visibility="Visible">
-                    <Grid Margin="10">
+                    <StackPanel>
+                        <!-- Refresh bar -->
+                        <Border Background="#F0F0F0" BorderBrush="#DDD" BorderThickness="1" CornerRadius="5" Padding="10,8" Margin="10,10,10,0">
+                            <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                <Button Name="btnRefreshDefenderAV" Content="&#x1F504;  Refresh Get-MpComputerStatus / Get-MpPreference" Style="{StaticResource ActionButton}" Margin="0,0,10,0"/>
+                                <TextBlock Name="lblDefenderAVRefreshTime" Text="" FontFamily="Segoe UI" FontSize="11" Foreground="#888" VerticalAlignment="Center"/>
+                            </StackPanel>
+                        </Border>
+                        <Grid Margin="10">
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="*"/>
                             <ColumnDefinition Width="*"/>
@@ -290,8 +298,9 @@ It offers a centralized view of the security configuration, log files, updates, 
                             </StackPanel>
                         </Border>
                     </Grid>
+                    </StackPanel>
                 </ScrollViewer>
-                
+
                 <!-- Panel 2: Attack Surface Reduction -->
                 <Grid Name="panelASR" Margin="10" Visibility="Collapsed">
                     <Grid.RowDefinitions>
@@ -480,11 +489,19 @@ It offers a centralized view of the security configuration, log files, updates, 
                             <StackPanel>
                                 <Label Content="Report Options" FontSize="14" FontWeight="Bold" Foreground="#E8E8E8" Margin="0,0,0,10"/>
                                 <WrapPanel>
-                                    <CheckBox Name="rdbOverview" Content="Overview" Margin="10,5" IsChecked="True" FontFamily="Segoe UI"/>
-                                    <CheckBox Name="rdbTopfiles" Content="Top 10 Files" Margin="10,5" FontFamily="Segoe UI"/>
-                                    <CheckBox Name="rdbTopExtensions" Content="Top 10 Extensions" Margin="10,5" FontFamily="Segoe UI"/>
-                                    <CheckBox Name="rdbTopProcess" Content="Top 10 Processes" Margin="10,5" FontFamily="Segoe UI"/>
-                                    <CheckBox Name="rdbTopScans" Content="Top 10 Scans" Margin="10,5" FontFamily="Segoe UI"/>
+                                    <TextBlock Text="Report Windows:" FontWeight="SemiBold" FontFamily="Segoe UI" FontSize="12" Foreground="#555" Width="800" Margin="10,2,0,2"/>
+                                    <CheckBox Name="rdbOverview"       Content="-Overview"       Margin="10,3" IsChecked="True" FontFamily="Consolas" FontSize="12"/>
+                                    <CheckBox Name="rdbTopfiles"       Content="-TopFiles"       Margin="10,3" FontFamily="Consolas" FontSize="12"/>
+                                    <CheckBox Name="rdbTopPaths"       Content="-TopPaths"       Margin="10,3" FontFamily="Consolas" FontSize="12"/>
+                                    <CheckBox Name="rdbTopExtensions"  Content="-TopExtensions"  Margin="10,3" FontFamily="Consolas" FontSize="12"/>
+                                    <CheckBox Name="rdbTopProcess"     Content="-TopProcesses"   Margin="10,3" FontFamily="Consolas" FontSize="12"/>
+                                    <CheckBox Name="rdbTopScans"       Content="-TopScans"       Margin="10,3" FontFamily="Consolas" FontSize="12"/>
+                                    <TextBlock Text="Detail Level (nested sub-tables within parent report):" FontWeight="SemiBold" FontFamily="Segoe UI" FontSize="12" Foreground="#555" Width="800" Margin="10,8,0,2"/>
+                                    <CheckBox Name="rdbTopScansPerFile"      Content="-TopScansPerFile"      Margin="10,3" FontFamily="Consolas" FontSize="12"/>
+                                    <CheckBox Name="rdbTopProcessesPerFile"  Content="-TopProcessesPerFile"  Margin="10,3" FontFamily="Consolas" FontSize="12"/>
+                                    <CheckBox Name="rdbTopFilesPerPath"      Content="-TopFilesPerPath"      Margin="10,3" FontFamily="Consolas" FontSize="12"/>
+                                    <CheckBox Name="rdbTopScansPerProcess"   Content="-TopScansPerProcess"   Margin="10,3" FontFamily="Consolas" FontSize="12"/>
+                                    <CheckBox Name="rdbTopScansPerExtension" Content="-TopScansPerExtension" Margin="10,3" FontFamily="Consolas" FontSize="12"/>
                                 </WrapPanel>
                                 <WrapPanel Margin="0,10,0,0">
                                     <Button Name="btnShowPerformanceReport" Content="Show Performance Report" Style="{StaticResource ActionButton}" Width="220"/>
@@ -617,6 +634,8 @@ It offers a centralized view of the security configuration, log files, updates, 
                             <RowDefinition Height="Auto"/>
                             <RowDefinition Height="Auto"/>
                             <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
                         </Grid.RowDefinitions>
 
                         <!-- Refresh bar -->
@@ -681,6 +700,30 @@ It offers a centralized view of the security configuration, log files, updates, 
                             </StackPanel>
                         </Border>
 
+                        <!-- Performance Tuning -->
+                        <Border Grid.Row="3" Style="{StaticResource SectionBorder}">
+                            <StackPanel>
+                                <Label Content="Performance Tuning" FontSize="14" FontWeight="Bold" Foreground="#E8E8E8" Margin="0,0,0,10"/>
+                                <TextBlock Text="Apply settings to reduce scan overhead and CPU impact. Lowers cloud block level, CPU load factor, disables network file scanning, file hash computation, and PUA protection." TextWrapping="Wrap" Margin="0,0,0,15" FontFamily="Segoe UI" Foreground="#666"/>
+                                <WrapPanel>
+                                    <Button Name="btnPerfTuning" Content="Apply Performance Tuning" Style="{StaticResource ActionButton}" Width="230"/>
+                                </WrapPanel>
+                                <TextBlock Text="Note: Runs Set-MpPreference with -CloudBlockLevel 0 -CloudExtendedTimeout 10 -ScanAvgCPULoadFactor 20 -DisableScanningNetworkFiles `$true -EnableFileHashComputation `$false -PUAProtection 0." TextWrapping="Wrap" Margin="0,10,0,0" FontFamily="Segoe UI" Foreground="#888" FontStyle="Italic"/>
+                            </StackPanel>
+                        </Border>
+
+                        <!-- Full Protection Disable -->
+                        <Border Grid.Row="4" Style="{StaticResource SectionBorder}">
+                            <StackPanel>
+                                <Label Content="Full Protection Disable" FontSize="14" FontWeight="Bold" Foreground="#E8E8E8" Margin="0,0,0,10"/>
+                                <TextBlock Text="Disable all major real-time protection components: real-time monitoring, behavior monitoring, block at first seen, IOAV protection, and network protection." TextWrapping="Wrap" Margin="0,0,0,15" FontFamily="Segoe UI" Foreground="#666"/>
+                                <WrapPanel>
+                                    <Button Name="btnFullProtectionDisable" Content="Disable Full Protection" Style="{StaticResource ActionButton}" Width="230"/>
+                                </WrapPanel>
+                                <TextBlock Text="Note: Runs Set-MpPreference -DisableRealtimeMonitoring `$true -DisableBehaviorMonitoring `$true -DisableBlockAtFirstSeen `$true -DisableIOAVProtection `$true -EnableNetworkProtection 0." TextWrapping="Wrap" Margin="0,10,0,0" FontFamily="Segoe UI" Foreground="#888" FontStyle="Italic"/>
+                            </StackPanel>
+                        </Border>
+
                     </Grid>
                 </ScrollViewer>
 
@@ -734,6 +777,8 @@ function Switch-Panel { param([string]$PanelName)
 }
 
 $btnMenuDefenderAV.Add_Click({ Switch-Panel -PanelName "DefenderAV" })
+
+$btnRefreshDefenderAV.Add_Click({ Update-DefenderAV })
 $btnMenuASR.Add_Click({ Switch-Panel -PanelName "ASR" })
 $btnMenuExclusions.Add_Click({
     Switch-Panel -PanelName "Exclusions"
@@ -1162,6 +1207,70 @@ Function ReadHashComputation {
     return "Disabled"
 }
 
+Function Update-DefenderAV {
+    $MainWindow1.Cursor = [System.Windows.Input.Cursors]::Wait
+    try {
+        $MPpreference = Get-MpPreference
+        $MPComputerstatus = Get-MpComputerStatus
+
+        # Version Information
+        $lblAMEngineVersion_txt.Content = $MPComputerstatus.AMEngineVersion
+        $lblAMProductVersion_txt.Content = $MPComputerstatus.AMProductVersion
+        $lblAMServiceVersion_txt.Content = $MPComputerstatus.AMServiceVersion
+        $lblNISEngineVersion_txt.Content = $MPComputerstatus.NISEngineVersion
+        $lblAMRunningMode_txt.Content = $MPComputerstatus.AMRunningMode
+        $lblComputerState_txt.Content = $MPComputerstatus.ComputerState
+
+        # Service Status
+        $lblAMServiceEnabled_txt.Content = $MPComputerstatus.AMServiceEnabled
+        $lblAntivirusEnabled_txt.Content = $MPComputerstatus.AntivirusEnabled
+        $lblAntispywareEnabled_txt.Content = $MPComputerstatus.AntispywareEnabled
+        $lblNISEnabled_txt.Content = $MPComputerstatus.NISEnabled
+        $lblIsVirtualMachine_txt.Content = $MPComputerstatus.IsVirtualMachine
+        $lblComputerID_txt.Content = $MPComputerstatus.ComputerID
+
+        # Real-Time Protection
+        $lblRealTimeProtection_txt.Content = $MPComputerstatus.RealTimeProtectionEnabled
+        $lblOnAccessProtection_txt.Content = $MPComputerstatus.OnAccessProtectionEnabled
+        $lblBehaviorMonitor_txt.Content = $MPComputerstatus.BehaviorMonitorEnabled
+        $lblIoavProtection_txt.Content = $MPComputerstatus.IoavProtectionEnabled
+        $lblTamper_txt.Content = $MPComputerstatus.IsTamperProtected
+        $lblTamperSource_txt.Content = $MPComputerstatus.TamperProtectionSource
+
+        # Scan Information
+        $lblFullScanAge_txt.Content = if ($MPComputerstatus.FullScanAge -eq 4294967295) { "Never" } else { "$($MPComputerstatus.FullScanAge) days" }
+        $lblFullScanStartTime_txt.Content = if ($MPComputerstatus.FullScanStartTime) { $MPComputerstatus.FullScanStartTime } else { "Never" }
+        $lblFullScanEndTime_txt.Content = if ($MPComputerstatus.FullScanEndTime) { $MPComputerstatus.FullScanEndTime } else { "Never" }
+        $lblQuickScanAge_txt.Content = if ($MPComputerstatus.QuickScanAge -eq 4294967295) { "Never" } else { "$($MPComputerstatus.QuickScanAge) days" }
+        $lblQuickScanStartTime_txt.Content = if ($MPComputerstatus.QuickScanStartTime) { $MPComputerstatus.QuickScanStartTime } else { "Never" }
+        $lblQuickScanEndTime_txt.Content = if ($MPComputerstatus.QuickScanEndTime) { $MPComputerstatus.QuickScanEndTime } else { "Never" }
+
+        # Additional Information
+        $lblSignatureFallBackOrder_txt.Content = $MPpreference.SignatureFallbackOrder
+        $lblSigUpdates_txt.Content = $MPComputerstatus.NISSignatureLastUpdated
+        $scanSourceMap = @{ 0 = "Unknown"; 1 = "User"; 2 = "System"; 3 = "Real-time"; 4 = "IOAV" }
+        $lblLastQuickScanSource_txt.Content = if ($scanSourceMap.ContainsKey([int]$MPComputerstatus.LastQuickScanSource)) { $scanSourceMap[[int]$MPComputerstatus.LastQuickScanSource] } else { $MPComputerstatus.LastQuickScanSource }
+
+        # Protection Settings
+        $lblQuarantine_text.Content = $MPpreference.QuarantinePurgeItemsAfterDelay
+        $lblPUAProtect_text.Content = Convert-BoolValue -Value $MPpreference.DisableBlockAtFirstSeen
+        $lblCloudTimeout_text.Content = $MPpreference.CloudExtendedTimeout
+        $lblDeviceControl_Text.Content = $MPComputerstatus.DeviceControlState
+        $lblEnableFileHashComputation_Text.Content = ReadHashComputation
+        switch ($MPpreference.CloudBlockLevel) {
+            0 { $lblCloudBlockLevel_txt.Content = "Default" }
+            1 { $lblCloudBlockLevel_txt.Content = "Moderate" }
+            2 { $lblCloudBlockLevel_txt.Content = "High" }
+            3 { $lblCloudBlockLevel_txt.Content = "High+" }
+            4 { $lblCloudBlockLevel_txt.Content = "Zero tolerance" }
+        }
+
+        $lblDefenderAVRefreshTime.Text = "Last refreshed: $(Get-Date -Format 'HH:mm:ss')"
+    }
+    catch { [System.Windows.MessageBox]::Show($Error[0], 'Refresh Error', 'OK', 'Error') }
+    $MainWindow1.Cursor = [System.Windows.Input.Cursors]::Arrow
+}
+
 Function WindowLoader {
     try {
         $MPpreference = Get-MpPreference
@@ -1432,7 +1541,19 @@ Function Show-PerformanceReportWindow {
 Function PerformanceReport {
     try {
         if (Test-Path "$WorkingPath\MDAV_Recording.etl") {
-            $PerformanceReport = Get-MpPerformanceReport -Path "$WorkingPath\MDAV_Recording.etl" -TopFiles:10 -TopExtensions:10 -TopProcesses:10 -TopScans:10 -Overview
+            $mpParams = @{ Path = "$WorkingPath\MDAV_Recording.etl" }
+            if ($rdbOverview.IsChecked)            { $mpParams['Overview']            = $true }
+            if ($rdbTopfiles.IsChecked)            { $mpParams['TopFiles']            = 10 }
+            if ($rdbTopScansPerFile.IsChecked)     { $mpParams['TopScansPerFile']     = 10 }
+            if ($rdbTopProcessesPerFile.IsChecked) { $mpParams['TopProcessesPerFile'] = 10 }
+            if ($rdbTopPaths.IsChecked)            { $mpParams['TopPaths'] = 10; $mpParams['TopPathsDepth'] = 3 }
+            if ($rdbTopFilesPerPath.IsChecked)     { $mpParams['TopFilesPerPath']     = 10 }
+            if ($rdbTopExtensions.IsChecked)       { $mpParams['TopExtensions']       = 10 }
+            if ($rdbTopScansPerExtension.IsChecked){ $mpParams['TopScansPerExtension']= 10 }
+            if ($rdbTopProcess.IsChecked)          { $mpParams['TopProcesses']        = 10 }
+            if ($rdbTopScansPerProcess.IsChecked)  { $mpParams['TopScansPerProcess']  = 10 }
+            if ($rdbTopScans.IsChecked)            { $mpParams['TopScans']            = 10 }
+            $PerformanceReport = Get-MpPerformanceReport @mpParams
 
             if ($PerformanceReport) {
                 # Collect all selected reports to open
@@ -1442,45 +1563,32 @@ Function PerformanceReport {
                 if ($rdbOverview.IsChecked -eq $true) {
                     if ($PerformanceReport.Overview) {
                         $overviewText = ($PerformanceReport.Overview | Out-String).Trim()
-                        $reportsToOpen += @{Data = $overviewText; Title = "Performance Report - Overview"; IsRawText = $true}
+                        $reportsToOpen += @{Data = $overviewText; Title = "Get-MpPerformanceReport -Overview"; IsRawText = $true}
                     } else {
                         $missingReports += "Overview"
                     }
                 }
 
-                if ($rdbTopfiles.IsChecked -eq $true) {
-                    if ($PerformanceReport.TopFiles) {
-                        $flat = $PerformanceReport.TopFiles | Select-Object @{N='Path';E={$_.Path}}, @{N='Count';E={$_.Count}}, @{N='TotalDuration_ms';E={[math]::Round($_.TotalDuration.TotalMilliseconds)}}, @{N='MinDuration_ms';E={[math]::Round($_.MinDuration.TotalMilliseconds)}}, @{N='AverageDuration_ms';E={[math]::Round($_.AverageDuration.TotalMilliseconds)}}, @{N='MaxDuration_ms';E={[math]::Round($_.MaxDuration.TotalMilliseconds)}}, @{N='MedianDuration_ms';E={[math]::Round($_.MedianDuration.TotalMilliseconds)}}
-                        $reportsToOpen += @{Data = $flat; Title = "Performance Report - Top Files Scans"}
-                    } else {
-                        $missingReports += "Top Files"
-                    }
-                }
-
-                if ($rdbTopExtensions.IsChecked -eq $true) {
-                    if ($PerformanceReport.TopExtensions) {
-                        $flat = $PerformanceReport.TopExtensions | Select-Object @{N='Extension';E={$_.Extension}}, @{N='Count';E={$_.Count}}, @{N='TotalDuration_ms';E={[math]::Round($_.TotalDuration.TotalMilliseconds)}}, @{N='MinDuration_ms';E={[math]::Round($_.MinDuration.TotalMilliseconds)}}, @{N='AverageDuration_ms';E={[math]::Round($_.AverageDuration.TotalMilliseconds)}}, @{N='MaxDuration_ms';E={[math]::Round($_.MaxDuration.TotalMilliseconds)}}, @{N='MedianDuration_ms';E={[math]::Round($_.MedianDuration.TotalMilliseconds)}}
-                        $reportsToOpen += @{Data = $flat; Title = "Performance Report - Top Extensions Scans"}
-                    } else {
-                        $missingReports += "Top Extensions"
-                    }
-                }
-
-                if ($rdbTopProcess.IsChecked -eq $true) {
-                    if ($PerformanceReport.TopProcesses) {
-                        $flat = $PerformanceReport.TopProcesses | Select-Object @{N='ProcessPath';E={$_.ProcessPath}}, @{N='Count';E={$_.Count}}, @{N='TotalDuration_ms';E={[math]::Round($_.TotalDuration.TotalMilliseconds)}}, @{N='MinDuration_ms';E={[math]::Round($_.MinDuration.TotalMilliseconds)}}, @{N='AverageDuration_ms';E={[math]::Round($_.AverageDuration.TotalMilliseconds)}}, @{N='MaxDuration_ms';E={[math]::Round($_.MaxDuration.TotalMilliseconds)}}, @{N='MedianDuration_ms';E={[math]::Round($_.MedianDuration.TotalMilliseconds)}}
-                        $reportsToOpen += @{Data = $flat; Title = "Performance Report - Top Processes Scans"}
-                    } else {
-                        $missingReports += "Top Processes"
-                    }
-                }
-
-                if ($rdbTopScans.IsChecked -eq $true) {
-                    if ($PerformanceReport.TopScans) {
-                        $flat = $PerformanceReport.TopScans | Select-Object @{N='ScanType';E={$_.ScanType}}, @{N='SkipReason';E={$_.SkipReason}}, @{N='Comments';E={$_.Comments}}, @{N='Path';E={$_.Path}}, @{N='Duration_ms';E={[math]::Round($_.ScanDuration.TotalMilliseconds)}}, @{N='StartTime';E={$_.StartTime}}, @{N='ScanReason';E={$_.ScanReason}}
-                        $reportsToOpen += @{Data = $flat; Title = "Performance Report - Top Scans"}
-                    } else {
-                        $missingReports += "Top Scans"
+                # Only the 5 parent collections are top-level output properties.
+                # The PerX checkboxes enrich these by adding nested sub-tables within each entry.
+                $mainReports = @(
+                    @{ Control = $rdbTopfiles;      Property = "TopFiles";      Param = "-TopFiles 10";      Extras = @(@{Ctrl=$rdbTopScansPerFile; Param="-TopScansPerFile 10"}, @{Ctrl=$rdbTopProcessesPerFile; Param="-TopProcessesPerFile 10"}) }
+                    @{ Control = $rdbTopPaths;      Property = "TopPaths";      Param = "-TopPaths 10";      Extras = @(@{Ctrl=$rdbTopFilesPerPath; Param="-TopFilesPerPath 10"}) }
+                    @{ Control = $rdbTopExtensions; Property = "TopExtensions"; Param = "-TopExtensions 10"; Extras = @(@{Ctrl=$rdbTopScansPerExtension; Param="-TopScansPerExtension 10"}) }
+                    @{ Control = $rdbTopProcess;    Property = "TopProcesses";  Param = "-TopProcesses 10";  Extras = @(@{Ctrl=$rdbTopScansPerProcess; Param="-TopScansPerProcess 10"}) }
+                    @{ Control = $rdbTopScans;      Property = "TopScans";      Param = "-TopScans 10";      Extras = @() }
+                )
+                foreach ($opt in $mainReports) {
+                    if ($opt.Control.IsChecked -eq $true) {
+                        $data = $PerformanceReport.($opt.Property)
+                        if ($data) {
+                            $flat = ($data | Out-String).Trim()
+                            $extraParams = ($opt.Extras | Where-Object { $_.Ctrl.IsChecked -eq $true } | ForEach-Object { $_.Param }) -join " "
+                            $titleParams = if ($extraParams) { "$($opt.Param) $extraParams" } else { $opt.Param }
+                            $reportsToOpen += @{Data = $flat; Title = "Get-MpPerformanceReport $titleParams"; IsRawText = $true}
+                        } else {
+                            $missingReports += $opt.Param
+                        }
                     }
                 }
 
@@ -1510,7 +1618,7 @@ Function PerformanceReport {
         <Border Grid.Row="0" Background="#E8E8E8" Padding="15,10" Margin="0,0,0,10" CornerRadius="5">
             <StackPanel>
                 <TextBlock Text="$title" FontSize="18" FontWeight="Bold" Foreground="#1A1A1A" FontFamily="Segoe UI"/>
-                <TextBlock Text="Raw output from Get-MpPerformanceReport -Overview" FontSize="12" Foreground="#555555" FontFamily="Segoe UI"/>
+                <TextBlock Text="Output from Get-MpPerformanceReport | Out-String" FontSize="12" Foreground="#555555" FontFamily="Segoe UI"/>
             </StackPanel>
         </Border>
         <TextBox Grid.Row="1" Name="txtOverview" IsReadOnly="True" FontFamily="Consolas" FontSize="12"
@@ -2797,7 +2905,19 @@ $btnShowPerformanceReport.Add_Click({
         $MainWindow1.Cursor = [System.Windows.Input.Cursors]::Wait
 
         if (Test-Path $etlPath) {
-            $PerformanceReport = Get-MpPerformanceReport -Path $etlPath -TopFiles:10 -TopExtensions:10 -TopProcesses:10 -TopScans:10 -Overview
+            $mpParams = @{ Path = $etlPath }
+            if ($rdbOverview.IsChecked)            { $mpParams['Overview']            = $true }
+            if ($rdbTopfiles.IsChecked)            { $mpParams['TopFiles']            = 10 }
+            if ($rdbTopScansPerFile.IsChecked)     { $mpParams['TopScansPerFile']     = 10 }
+            if ($rdbTopProcessesPerFile.IsChecked) { $mpParams['TopProcessesPerFile'] = 10 }
+            if ($rdbTopPaths.IsChecked)            { $mpParams['TopPaths'] = 10; $mpParams['TopPathsDepth'] = 3 }
+            if ($rdbTopFilesPerPath.IsChecked)     { $mpParams['TopFilesPerPath']     = 10 }
+            if ($rdbTopExtensions.IsChecked)       { $mpParams['TopExtensions']       = 10 }
+            if ($rdbTopScansPerExtension.IsChecked){ $mpParams['TopScansPerExtension']= 10 }
+            if ($rdbTopProcess.IsChecked)          { $mpParams['TopProcesses']        = 10 }
+            if ($rdbTopScansPerProcess.IsChecked)  { $mpParams['TopScansPerProcess']  = 10 }
+            if ($rdbTopScans.IsChecked)            { $mpParams['TopScans']            = 10 }
+            $PerformanceReport = Get-MpPerformanceReport @mpParams
 
             if ($PerformanceReport) {
                 # Collect all selected reports to open
@@ -2807,45 +2927,32 @@ $btnShowPerformanceReport.Add_Click({
                 if ($rdbOverview.IsChecked -eq $true) {
                     if ($PerformanceReport.Overview) {
                         $overviewText = ($PerformanceReport.Overview | Out-String).Trim()
-                        $reportsToOpen += @{Data = $overviewText; Title = "Performance Report - Overview"; IsRawText = $true}
+                        $reportsToOpen += @{Data = $overviewText; Title = "Get-MpPerformanceReport -Overview"; IsRawText = $true}
                     } else {
                         $missingReports += "Overview"
                     }
                 }
 
-                if ($rdbTopfiles.IsChecked -eq $true) {
-                    if ($PerformanceReport.TopFiles) {
-                        $flat = $PerformanceReport.TopFiles | Select-Object @{N='Path';E={$_.Path}}, @{N='Count';E={$_.Count}}, @{N='TotalDuration_ms';E={[math]::Round($_.TotalDuration.TotalMilliseconds)}}, @{N='MinDuration_ms';E={[math]::Round($_.MinDuration.TotalMilliseconds)}}, @{N='AverageDuration_ms';E={[math]::Round($_.AverageDuration.TotalMilliseconds)}}, @{N='MaxDuration_ms';E={[math]::Round($_.MaxDuration.TotalMilliseconds)}}, @{N='MedianDuration_ms';E={[math]::Round($_.MedianDuration.TotalMilliseconds)}}
-                        $reportsToOpen += @{Data = $flat; Title = "Performance Report - Top Files Scans"}
-                    } else {
-                        $missingReports += "Top Files"
-                    }
-                }
-
-                if ($rdbTopExtensions.IsChecked -eq $true) {
-                    if ($PerformanceReport.TopExtensions) {
-                        $flat = $PerformanceReport.TopExtensions | Select-Object @{N='Extension';E={$_.Extension}}, @{N='Count';E={$_.Count}}, @{N='TotalDuration_ms';E={[math]::Round($_.TotalDuration.TotalMilliseconds)}}, @{N='MinDuration_ms';E={[math]::Round($_.MinDuration.TotalMilliseconds)}}, @{N='AverageDuration_ms';E={[math]::Round($_.AverageDuration.TotalMilliseconds)}}, @{N='MaxDuration_ms';E={[math]::Round($_.MaxDuration.TotalMilliseconds)}}, @{N='MedianDuration_ms';E={[math]::Round($_.MedianDuration.TotalMilliseconds)}}
-                        $reportsToOpen += @{Data = $flat; Title = "Performance Report - Top Extensions Scans"}
-                    } else {
-                        $missingReports += "Top Extensions"
-                    }
-                }
-
-                if ($rdbTopProcess.IsChecked -eq $true) {
-                    if ($PerformanceReport.TopProcesses) {
-                        $flat = $PerformanceReport.TopProcesses | Select-Object @{N='ProcessPath';E={$_.ProcessPath}}, @{N='Count';E={$_.Count}}, @{N='TotalDuration_ms';E={[math]::Round($_.TotalDuration.TotalMilliseconds)}}, @{N='MinDuration_ms';E={[math]::Round($_.MinDuration.TotalMilliseconds)}}, @{N='AverageDuration_ms';E={[math]::Round($_.AverageDuration.TotalMilliseconds)}}, @{N='MaxDuration_ms';E={[math]::Round($_.MaxDuration.TotalMilliseconds)}}, @{N='MedianDuration_ms';E={[math]::Round($_.MedianDuration.TotalMilliseconds)}}
-                        $reportsToOpen += @{Data = $flat; Title = "Performance Report - Top Processes Scans"}
-                    } else {
-                        $missingReports += "Top Processes"
-                    }
-                }
-
-                if ($rdbTopScans.IsChecked -eq $true) {
-                    if ($PerformanceReport.TopScans) {
-                        $flat = $PerformanceReport.TopScans | Select-Object @{N='ScanType';E={$_.ScanType}}, @{N='SkipReason';E={$_.SkipReason}}, @{N='Comments';E={$_.Comments}}, @{N='Path';E={$_.Path}}, @{N='Duration_ms';E={[math]::Round($_.ScanDuration.TotalMilliseconds)}}, @{N='StartTime';E={$_.StartTime}}, @{N='ScanReason';E={$_.ScanReason}}
-                        $reportsToOpen += @{Data = $flat; Title = "Performance Report - Top Scans"}
-                    } else {
-                        $missingReports += "Top Scans"
+                # Only the 5 parent collections are top-level output properties.
+                # The PerX checkboxes enrich these by adding nested sub-tables within each entry.
+                $mainReports = @(
+                    @{ Control = $rdbTopfiles;      Property = "TopFiles";      Param = "-TopFiles 10";      Extras = @(@{Ctrl=$rdbTopScansPerFile; Param="-TopScansPerFile 10"}, @{Ctrl=$rdbTopProcessesPerFile; Param="-TopProcessesPerFile 10"}) }
+                    @{ Control = $rdbTopPaths;      Property = "TopPaths";      Param = "-TopPaths 10";      Extras = @(@{Ctrl=$rdbTopFilesPerPath; Param="-TopFilesPerPath 10"}) }
+                    @{ Control = $rdbTopExtensions; Property = "TopExtensions"; Param = "-TopExtensions 10"; Extras = @(@{Ctrl=$rdbTopScansPerExtension; Param="-TopScansPerExtension 10"}) }
+                    @{ Control = $rdbTopProcess;    Property = "TopProcesses";  Param = "-TopProcesses 10";  Extras = @(@{Ctrl=$rdbTopScansPerProcess; Param="-TopScansPerProcess 10"}) }
+                    @{ Control = $rdbTopScans;      Property = "TopScans";      Param = "-TopScans 10";      Extras = @() }
+                )
+                foreach ($opt in $mainReports) {
+                    if ($opt.Control.IsChecked -eq $true) {
+                        $data = $PerformanceReport.($opt.Property)
+                        if ($data) {
+                            $flat = ($data | Out-String).Trim()
+                            $extraParams = ($opt.Extras | Where-Object { $_.Ctrl.IsChecked -eq $true } | ForEach-Object { $_.Param }) -join " "
+                            $titleParams = if ($extraParams) { "$($opt.Param) $extraParams" } else { $opt.Param }
+                            $reportsToOpen += @{Data = $flat; Title = "Get-MpPerformanceReport $titleParams"; IsRawText = $true}
+                        } else {
+                            $missingReports += $opt.Param
+                        }
                     }
                 }
 
@@ -2875,7 +2982,7 @@ $btnShowPerformanceReport.Add_Click({
         <Border Grid.Row="0" Background="#E8E8E8" Padding="15,10" Margin="0,0,0,10" CornerRadius="5">
             <StackPanel>
                 <TextBlock Text="$title" FontSize="18" FontWeight="Bold" Foreground="#1A1A1A" FontFamily="Segoe UI"/>
-                <TextBlock Text="Raw output from Get-MpPerformanceReport -Overview" FontSize="12" Foreground="#555555" FontFamily="Segoe UI"/>
+                <TextBlock Text="Output from Get-MpPerformanceReport | Out-String" FontSize="12" Foreground="#555555" FontFamily="Segoe UI"/>
             </StackPanel>
         </Border>
         <TextBox Grid.Row="1" Name="txtOverview" IsReadOnly="True" FontFamily="Consolas" FontSize="12"
@@ -3278,6 +3385,55 @@ $btnDisableTamperProtection.Add_Click({
             [System.Windows.MessageBox]::Show('Tamper Protection disabled successfully.', 'Success', 'OK', 'Information')
         } catch {
             [System.Windows.MessageBox]::Show("Failed to disable Tamper Protection:`n$($Error[0].Exception.Message)", 'Error', 'OK', 'Error')
+        }
+        $MainWindow1.Cursor = [System.Windows.Input.Cursors]::Arrow
+    }
+})
+
+$btnPerfTuning.Add_Click({
+    $confirm = [System.Windows.MessageBox]::Show(
+        "Are you sure you want to apply performance tuning settings?`n`nThis will run:`nSet-MpPreference ``
+    -CloudBlockLevel 0 ``
+    -CloudExtendedTimeout 10 ``
+    -ScanAvgCPULoadFactor 20 ``
+    -DisableScanningNetworkFiles `$true ``
+    -EnableFileHashComputation `$false ``
+    -PUAProtection 0`n`nUse only for troubleshooting purposes.",
+        'Apply Performance Tuning', 'YesNo', 'Warning')
+    if ($confirm -eq 'Yes') {
+        $MainWindow1.Cursor = [System.Windows.Input.Cursors]::Wait
+        try {
+            Set-MpPreference `
+                -CloudBlockLevel 0 `
+                -CloudExtendedTimeout 10 `
+                -ScanAvgCPULoadFactor 20 `
+                -DisableScanningNetworkFiles $true `
+                -EnableFileHashComputation $false `
+                -PUAProtection 0 `
+                -ErrorAction Stop
+            [System.Windows.MessageBox]::Show('Performance tuning settings applied successfully.', 'Success', 'OK', 'Information')
+        } catch {
+            [System.Windows.MessageBox]::Show("Failed to apply performance tuning settings:`n$($Error[0].Exception.Message)", 'Error', 'OK', 'Error')
+        }
+        $MainWindow1.Cursor = [System.Windows.Input.Cursors]::Arrow
+    }
+})
+
+$btnFullProtectionDisable.Add_Click({
+    $confirm = [System.Windows.MessageBox]::Show(
+        "Are you sure you want to disable all protection components?`n`nThis will run:`nSet-MpPreference -DisableRealtimeMonitoring `$true`nSet-MpPreference -DisableBehaviorMonitoring `$true`nSet-MpPreference -DisableBlockAtFirstSeen `$true`nSet-MpPreference -DisableIOAVProtection `$true`nSet-MpPreference -EnableNetworkProtection 0`n`nUse only for troubleshooting purposes.",
+        'Disable Full Protection', 'YesNo', 'Warning')
+    if ($confirm -eq 'Yes') {
+        $MainWindow1.Cursor = [System.Windows.Input.Cursors]::Wait
+        try {
+            Set-MpPreference -DisableRealtimeMonitoring $true -ErrorAction Stop
+            Set-MpPreference -DisableBehaviorMonitoring $true -ErrorAction Stop
+            Set-MpPreference -DisableBlockAtFirstSeen $true -ErrorAction Stop
+            Set-MpPreference -DisableIOAVProtection $true -ErrorAction Stop
+            Set-MpPreference -EnableNetworkProtection 0 -ErrorAction Stop
+            [System.Windows.MessageBox]::Show('All protection components disabled successfully.', 'Success', 'OK', 'Information')
+        } catch {
+            [System.Windows.MessageBox]::Show("Failed to disable protection:`n$($Error[0].Exception.Message)", 'Error', 'OK', 'Error')
         }
         $MainWindow1.Cursor = [System.Windows.Input.Cursors]::Arrow
     }
