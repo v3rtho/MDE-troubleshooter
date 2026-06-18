@@ -5,8 +5,8 @@ This tool is designed to assist you in analyzing issues related to Defender for 
 
 Please note that this is the initial version of the tool. If you encounter any bugs or have suggestions for enhancements, I encourage you to submit them on my GitHub page. Your feedback and reports are greatly appreciated.
 
-<img width="1482" height="1041" alt="2026-03-09 10_40_30-MDE Troubleshooter v3 0" src="https://github.com/user-attachments/assets/34d80bab-525d-4bf2-ae10-ae8b0c62358d" />
 
+<img width="1477" height="1040" alt="image" src="https://github.com/user-attachments/assets/53312df1-1b34-4176-8d76-0c253c258585" />
 
 
 # Prerequisites
