@@ -1,79 +1,162 @@
-# MDE-troubleshooter
-# INFO
+# MDE Troubleshooter
 
-This tool is designed to assist you in analyzing issues related to Defender for Endpoint on your local endpoint. It offers a centralized view of the security configuration, log files, updates, and provides access to the Performance Analyzer.
+A PowerShell WPF GUI tool for analyzing and troubleshooting Microsoft Defender for Endpoint (MDE) on Windows endpoints. Provides a centralized view of security configuration, event logs, performance data, and diagnostic actions — all in one interface.
 
-Please note that this is the initial version of the tool. If you encounter any bugs or have suggestions for enhancements, I encourage you to submit them on my GitHub page. Your feedback and reports are greatly appreciated.
+> **Disclaimer:** Script provided as-is. Use at your own risk. No guarantees or warranty provided. Always test in a non-production environment first.
 
+---
 
-<img width="1477" height="1040" alt="image" src="https://github.com/user-attachments/assets/53312df1-1b34-4176-8d76-0c253c258585" />
+## Requirements
 
+- Windows 10 / Windows 11 (Windows Server 2019+)
+- PowerShell 5.1 or later
+- **Administrator privileges** (required — script will not run without them)
+- Microsoft Defender Antivirus (not compatible with third-party AV)
+- MDE onboarded endpoint (required for SENSE logs and Troubleshooting Mode features)
 
-# Prerequisites
+---
 
-Script need to run as admin to view all settings.
+## How to Run
 
-# Disclaimer
+```powershell
+# Run as Administrator
+powershell.exe -ExecutionPolicy Bypass -File .\testFormV2.ps1
+```
 
-Script provided as is. Use at own risk. No guarantees or warranty provided.
+Or right-click the script and select **Run with PowerShell** (as Administrator).
 
-# Contact
-linkedin: https://www.linkedin.com/in/thomasvrhydn/
-twitter:  @thomasvrhydn
+---
 
-# Features  
+## Features
 
-Defender AV  
-Version Information — AM Engine, AM Product, AM Service, NIS Engine versions, AM Running Mode, Computer State  
-Service Status — AM Service, Antivirus, Antispyware, NIS enabled states, Virtual Machine detection, Computer ID  
-Real-Time Protection — RealTime Protection, OnAccess Protection, Behavior Monitor, IOAV Protection, Tamper Protection status and source  
-Scan Information — Full and Quick scan age, start/end times  
-Protection Settings — Cloud Block Level, Block at First Seen, Cloud Timeout, Quarantine purge days, File Hash Computation, Device Control state  
-Additional Information — Signature Fallback Order, NIS Signature last updated, Last Quick Scan source   
+### Defender AV
+Overview of the local Defender AV configuration, loaded on startup from `Get-MpComputerStatus` and `Get-MpPreference`.
 
-Attack Surface Reduction  
-ASR Rules Status — View all 19 ASR rules with their current state (Enabled / Audit / Warning / Not Enabled), with filtering by status in a sortable DataGrid popup  
-ASR Per-Rule Exclusions — View per-rule and global ASR exclusions read from the registry (HKLM:\...\Windows Defender Exploit Guard\ASR), with filtering by rule name  
-Exploit Protection — Export and open the Exploit Protection XML configuration  
+| Section | Details |
+|---|---|
+| Version Information | Engine, Product, Service, NIS engine versions, running mode, computer state |
+| Service Status | AM service, Antivirus, Antispyware, NIS enabled status, Virtual Machine flag, Computer ID |
+| Real-Time Protection | RTP, OnAccess, Behavior Monitor, IOAV, Tamper Protection status and source |
+| Scan Information | Full and Quick scan age, start/end times |
+| Protection Settings | Cloud block level, block at first seen, cloud timeout, quarantine days, file hash computation, device control |
+| Additional Information | Signature fallback order, NIS signature last updated, last quick scan source |
 
-Exclusions  
-Defender AV Exclusions — View all configured exclusions (Path, Extension, Process, IP Address) with search and type filtering in a popup DataGrid  
-Registry Key Information — Shows ManagedDefenderProductType, EnrollmentStatus, HideExclusionsFromLocalAdmins, DisableLocalAdminMerge, and determines management status with tamper protection validation (Intune-only, ConfigMgr, Co-managed scenarios)  
+Includes a **Refresh** button to re-query all values without restarting the tool.
 
-Updates  
-Current Signature Information — AV Signature version/age/last updated, Antispyware Signature version/age, NIS Signature version  
-Latest Microsoft Versions — Fetches the latest Engine, Platform, and Signature versions from Microsoft's website for comparison  
-Update Actions — Trigger a signature update via MpCmdRun.exe directly from the UI  
+---
 
-Logs  
-SENSE Logs — View EDR sensor event logs (Microsoft-Windows-SENSE/Operational) with filtering by text and level (Information/Warning/Error), plus a detail pane for selected entries  
-Defender AV Logs — View antivirus event logs (Microsoft-Windows-Windows Defender/Operational) with the same filtering and detail capabilities  
+### Attack Surface Reduction (ASR)
+- View all 19 ASR rules with their current status (Enabled / Audit / Warning / Not Enabled)
+- Filter rules by status
+- View **per-rule ASR exclusions** from the registry (`HKLM:\SOFTWARE\Microsoft\Windows Defender\Windows Defender Exploit Guard\ASR`)
+- Open the local **Exploit Protection XML** configuration
 
-Performance  
-Performance Recording — Start a Defender AV performance recording session (New-MpPerformanceRecording) that captures scan activity to an ETL file  
-Performance Reports — Generate reports from ETL recordings with selectable report types: Overview, Top 10 Files, Top 10 Extensions, Top 10 Processes, Top 10 Scans (multiple reports open simultaneously in separate windows)  
-Estimated Impact (MPlog) — Parse the latest MPlog file for EstimatedImpact entries, sorted by impact value, to identify high-impact scan targets  
-Client Analyzer Download — Download the official Microsoft Defender Client Analyzer tool (MDEClientAnalyzer.zip) to a folder of your choice  
+---
 
-Proxy  
-Proxy Configuration — Displays the current Proxy URL and Proxy PAC configured for Defender  
+### Exclusions
+- View all Defender AV exclusions: **Path**, **Extension**, **Process**, and **IP Address**
+- Searchable and filterable DataGrid
+- **Registry Key Information**:
+  - `ManagedDefenderProductType` — management channel (Intune / ConfigMgr / co-managed)
+  - `EnrollmentStatus` — MDE enrollment state
+  - `HideExclusionsFromLocalAdmins` — whether local admins can see exclusions
+  - `DisableLocalAdminMerge` — whether local admin policy merge is disabled
+  - `TPExclusions` — whether Tamper Protection covers exclusions
+- Displays a management status summary explaining whether exclusion tamper protection is in effect
 
-Firewall  
-Profile Status — View Domain, Private, and Public firewall profile settings (Enabled, Default Inbound/Outbound Action, Log Allowed)  
-Firewall Rules Browser — View all Windows Firewall rules in a filterable DataGrid with search, direction, action, enabled state, and profile filters. Shows rule name, ports, protocol, and program path  
+---
 
+### Updates
+- View current local signature versions (AV, AS, NIS) and signature age
+- Fetch **latest Microsoft engine, platform, and signature versions** from the Microsoft WDSI website
+- Trigger an **Intel signature update** via `MpCmdRun.exe -SignatureUpdate`
 
-# References
+---
 
-https://github.com/ugurkocde/Intune/blob/main/Defender%20for%20Endpoint/MDE%20-%20Update%20Tool/MDE_Update_Tool.ps1
+### Logs
+All log viewers include text filtering, level filtering, and a message detail pane.
 
-https://github.com/directorcia/Office365/blob/master/win10-asr-get.ps1
+| Log | Source |
+|---|---|
+| SENSE Logs | `Microsoft-Windows-SENSE/Operational` |
+| Defender AV Logs | `Microsoft-Windows-Windows Defender/Operational` (last 50 events) |
+| ASR Block Events | Event IDs 1121, 1122, 5007 |
+| Controlled Folder Access | Event IDs 1123, 1124, 5007 |
+| Exploit Guard Events | Security-Mitigations and Win32k events |
 
-https://docs.microsoft.com/en-us/windows/security/threat-protection/microsoft-defender-atp/overview-attack-surface-reduction
+---
 
-https://docs.microsoft.com/en-us/windows/security/threat-protection/microsoft-defender-atp/attack-surface-reduction
+### Performance
+- **Run Performance Analyzer** — launches `New-MpPerformanceRecording` in a new PowerShell window
+- **Show Performance Report** — opens a recently recorded `.etl` file or browse for a custom one via `Get-MpPerformanceReport`
+  - Configurable report windows: `-Overview`, `-TopFiles`, `-TopPaths`, `-TopExtensions`, `-TopProcesses`, `-TopScans`
+  - Detail level (nested sub-tables): `-TopScansPerFile`, `-TopProcessesPerFile`, `-TopFilesPerPath`, `-TopScansPerProcess`, `-TopScansPerExtension`
+  - Each selected report opens in its own window simultaneously (STA runspace pattern)
+  - Report window titles reflect the exact parameters used (e.g. `Get-MpPerformanceReport -TopFiles 10 -TopScansPerFile 10`)
+- **Estimated Impact (MPlog)** — parses the most recent `MPLog-*.log` file from `C:\ProgramData\Microsoft\Windows Defender\Support` and displays `EstimatedImpact` entries sorted by impact value
+- **Download Client Analyzer** — downloads the [MDE Client Analyzer](https://aka.ms/mdatpanalyzer) to a folder of your choice
 
-https://docs.microsoft.com/en-us/windows/security/threat-protection/microsoft-defender-atp/attack-surface-reduction-faq
+---
 
+### Proxy
+Displays the current Defender proxy configuration:
+- Proxy URL (`ProxyServer`)
+- Proxy PAC URL (`ProxyPacUrl`)
 
+---
 
+### Firewall
+- **Profile status** — Enabled state, default inbound/outbound action, and log settings for Domain, Private, and Public profiles
+- **Firewall Rules viewer** — searchable and filterable by direction, action, enabled state, and profile; shows name, protocol, ports, and program path
+- **Firewall Logs viewer** — parses `C:\Windows\System32\LogFiles\Firewall\pfirewall.log`; filterable by IP, action (ALLOW/DROP), protocol, and direction
+
+---
+
+### Troubleshooting Mode
+- Displays Troubleshooting Mode status fields from `Get-MpComputerStatus` (requires a recent Defender version):
+  - `TroubleShootingMode`, `TroubleShootingModeSource`, start/end times, expiration, quota
+- **Refresh** button to re-query status
+- **Disable Tamper Protection** — runs `Set-MpPreference -DisableTamperProtection $true` (requires Troubleshooting Mode to be active if policy-enforced)
+- **Performance Tuning** — applies settings to reduce scan overhead:
+  ```powershell
+  Set-MpPreference -CloudBlockLevel 0 -CloudExtendedTimeout 10 -ScanAvgCPULoadFactor 20 `
+                   -DisableScanningNetworkFiles $true -EnableFileHashComputation $false `
+                   -PUAProtection 0
+  ```
+- **Full Protection Disable** — disables all major real-time protection components:
+  ```powershell
+  Set-MpPreference -DisableRealtimeMonitoring $true
+  Set-MpPreference -DisableBehaviorMonitoring $true
+  Set-MpPreference -DisableBlockAtFirstSeen $true
+  Set-MpPreference -DisableIOAVProtection $true
+  Set-MpPreference -EnableNetworkProtection 0
+  ```
+
+> All Troubleshooting Mode actions show a confirmation dialog and require Tamper Protection to be disabled first if policy-enforced.
+
+---
+
+### Connectivity
+Tests TCP port 443 reachability to key MDE cloud endpoints:
+
+| Endpoint |
+|---|
+| login.microsoftonline.com |
+| winatp-gw-cus.microsoft.com |
+| winatp-gw-eus.microsoft.com |
+| winatp-gw-neu.microsoft.com |
+| winatp-gw-weu.microsoft.com |
+| us.vortex-win.data.microsoft.com |
+| eu.vortex-win.data.microsoft.com |
+| settings-win.data.microsoft.com |
+| events.data.microsoft.com |
+
+Results open in a sortable DataGrid showing endpoint, port, reachability, and resolved IP address.
+
+---
+
+## Author
+
+**Thomas Verheyden**
+- Blog: [vertho.tech](https://vertho.tech/2023/06/30/tool-mde-troubleshooter-is-born/)
+- Twitter/X: [@thomasvrhydn](https://twitter.com/thomasvrhydn)
