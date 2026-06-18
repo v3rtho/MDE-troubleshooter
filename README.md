@@ -8,7 +8,7 @@ A PowerShell WPF GUI tool for analyzing and troubleshooting Microsoft Defender f
 
 ## Requirements
 
-- Windows 10 / Windows 11 (Windows Server 2019+)
+- Windows 10 / Windows 11 (Windows Server 2016+)
 - PowerShell 5.1 or later
 - **Administrator privileges** (required — script will not run without them)
 - Microsoft Defender Antivirus (not compatible with third-party AV)
