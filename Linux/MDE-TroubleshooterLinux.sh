@@ -29,7 +29,14 @@ CYAN="\e[36m"
 RESET="\e[0m"
 
 # ---------- Globals ----------
-REPORT_DIR="${HOME}/mdatp_perf_reports"
+# Resolve the real invoking user's home even when the script is run via sudo,
+# so reports never land in /root.
+if [[ -n "${SUDO_USER:-}" ]]; then
+    _REAL_HOME="$(getent passwd "${SUDO_USER}" | cut -d: -f6)"
+else
+    _REAL_HOME="${HOME}"
+fi
+REPORT_DIR="${_REAL_HOME}/mdatp_perf_reports"
 TIMESTAMP="$(date +%Y%m%d_%H%M%S)"
 
 # Session tracking arrays (parallel arrays, index-aligned) used to build the HTML report
