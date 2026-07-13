@@ -1,5 +1,5 @@
 # Author: Thomas Verheyden
-# New release: 18.06.2025
+# New release: 13.07.2025
 # Version: 3.1.0
 # Blogpost: https://vertho.tech/2023/06/30/tool-mde-troubleshooter-is-born/
 # Website: vertho.tech
@@ -505,6 +505,7 @@ It offers a centralized view of the security configuration, log files, updates, 
                                 </WrapPanel>
                                 <WrapPanel Margin="0,10,0,0">
                                     <Button Name="btnShowPerformanceReport" Content="Show Performance Report" Style="{StaticResource ActionButton}" Width="220"/>
+                                    <Button Name="btnExportReportHtml"      Content="Export Report to HTML"   Style="{StaticResource ActionButton}" Width="220" Margin="10,0,0,0"/>
                                 </WrapPanel>
                             </StackPanel>
                         </Border>
@@ -3111,6 +3112,268 @@ $btnShowPerformanceReport.Add_Click({
     catch {
         $MainWindow1.Cursor = [System.Windows.Input.Cursors]::Arrow
         [System.Windows.MessageBox]::Show($Error[0], 'Error', 'OK', 'Error')
+    }
+})
+
+$btnExportReportHtml.Add_Click({
+    try {
+        $result = [System.Windows.MessageBox]::Show(
+            "Do you want to export the recently recorded report?`n`nClick 'Yes' to use the recent report from this session.`nClick 'No' to browse for a custom ETL file.",
+            'Select Report Source', 'YesNoCancel', 'Question')
+
+        $etlPath = $null
+        if ($result -eq 'Yes') {
+            $etlPath = "$WorkingPath\MDAV_Recording.etl"
+            if (-not (Test-Path $etlPath)) {
+                [System.Windows.MessageBox]::Show("No recent performance recording found. Please run 'Run Performance Analyzer' first.", 'Report Not Found', 'OK', 'Warning')
+                return
+            }
+        } elseif ($result -eq 'No') {
+            Add-Type -AssemblyName System.Windows.Forms
+            $ofd = New-Object System.Windows.Forms.OpenFileDialog
+            $ofd.InitialDirectory = $WorkingPath
+            $ofd.Filter           = "ETL Files (*.etl)|*.etl|All Files (*.*)|*.*"
+            $ofd.Title            = "Select Performance Report ETL File"
+            if ($ofd.ShowDialog() -ne [System.Windows.Forms.DialogResult]::OK) { return }
+            $etlPath = $ofd.FileName
+        } else { return }
+
+        $MainWindow1.Cursor = [System.Windows.Input.Cursors]::Wait
+
+        $mpParams = @{ Path = $etlPath }
+        if ($rdbOverview.IsChecked)            { $mpParams['Overview']            = $true }
+        if ($rdbTopfiles.IsChecked)            { $mpParams['TopFiles']            = 10 }
+        if ($rdbTopScansPerFile.IsChecked)     { $mpParams['TopScansPerFile']     = 10 }
+        if ($rdbTopProcessesPerFile.IsChecked) { $mpParams['TopProcessesPerFile'] = 10 }
+        if ($rdbTopPaths.IsChecked)            { $mpParams['TopPaths'] = 10; $mpParams['TopPathsDepth'] = 3 }
+        if ($rdbTopFilesPerPath.IsChecked)     { $mpParams['TopFilesPerPath']     = 10 }
+        if ($rdbTopExtensions.IsChecked)       { $mpParams['TopExtensions']       = 10 }
+        if ($rdbTopScansPerExtension.IsChecked){ $mpParams['TopScansPerExtension']= 10 }
+        if ($rdbTopProcess.IsChecked)          { $mpParams['TopProcesses']        = 10 }
+        if ($rdbTopScansPerProcess.IsChecked)  { $mpParams['TopScansPerProcess']  = 10 }
+        if ($rdbTopScans.IsChecked)            { $mpParams['TopScans']            = 10 }
+
+        $PerformanceReport = Get-MpPerformanceReport @mpParams
+        if (-not $PerformanceReport) {
+            [System.Windows.MessageBox]::Show("Performance report is empty. Please run again for a longer time.", 'No Data', 'OK', 'Warning')
+            $MainWindow1.Cursor = [System.Windows.Input.Cursors]::Arrow
+            return
+        }
+
+        # Build the HTML body section by section
+        $bodySb = [System.Text.StringBuilder]::new()
+
+        # Returns true if a value is scalar (safe to show in a plain <td>)
+        $isScalar = { param($v)
+            $null -eq $v -or $v -is [string] -or $v.GetType().IsPrimitive -or
+            $v -is [DateTime] -or $v -is [TimeSpan] -or $v -is [System.Enum]
+        }
+
+        # Build a simple HTML table from an array of objects; returns the HTML string
+        $buildSimpleTable = { param([object[]]$rows, [string]$extraClass)
+            if ($rows.Count -eq 0) { return '' }
+            $cls = if ($extraClass) { " class='$extraClass'" } else { '' }
+            $sb2 = [System.Text.StringBuilder]::new()
+            $fi  = $rows[0]
+            $cs  = $fi | Get-Member -MemberType Property,NoteProperty | Select-Object -ExpandProperty Name |
+                   Where-Object { & $isScalar ($fi.$_) }
+            [void]$sb2.Append("<table$cls><thead><tr>")
+            foreach ($c in $cs) { [void]$sb2.Append("<th>$([System.Net.WebUtility]::HtmlEncode($c))</th>") }
+            [void]$sb2.Append("</tr></thead><tbody>")
+            $ri = 0
+            foreach ($row in $rows) {
+                $rc = if ($ri % 2 -eq 1) { ' class="a"' } else { '' }
+                [void]$sb2.Append("<tr$rc>")
+                foreach ($c in $cs) {
+                    $v = $row.$c
+                    [void]$sb2.Append("<td>$(if($null -eq $v){''}else{[System.Net.WebUtility]::HtmlEncode("$v")})</td>")
+                }
+                [void]$sb2.Append("</tr>")
+                $ri++
+            }
+            [void]$sb2.Append("</tbody></table>")
+            return $sb2.ToString()
+        }
+
+        $buildTableHtml = {
+            param([string]$SectionTitle, [object]$Data, [string[]]$ColsAt3 = @())
+            $items = @($Data)
+            [void]$bodySb.Append("<section><h2>$([System.Net.WebUtility]::HtmlEncode($SectionTitle))</h2>")
+            if ($items.Count -eq 0) {
+                [void]$bodySb.Append("<p class='empty'>No data</p></section>")
+                return
+            }
+
+            # Split members into scalar columns and nested-collection columns.
+            # Check across all items for the first non-null value so we don't miss
+            # nested props that happen to be null on the first row.
+            $allMembers = $items[0] | Get-Member -MemberType Property,NoteProperty | Select-Object -ExpandProperty Name
+            $scalarCols = [System.Collections.Generic.List[string]]::new()
+            $nestedCols = [System.Collections.Generic.List[string]]::new()
+            foreach ($m in $allMembers) {
+                $sample = ($items | Where-Object { $null -ne $_.$m } | Select-Object -First 1).$m
+                if ($null -eq $sample -or (& $isScalar $sample)) { $scalarCols.Add($m) }
+                elseif ($sample -isnot [string] -and $sample -is [System.Collections.IEnumerable]) { $nestedCols.Add($m) }
+                else { $scalarCols.Add($m) }
+            }
+
+            # Reorder scalar cols: pull $ColsAt3 out and re-insert at index 2 (1-based position 3)
+            if ($ColsAt3.Count -gt 0) {
+                $pinned    = @($ColsAt3 | Where-Object { $scalarCols -contains $_ })
+                $remaining = @($scalarCols | Where-Object { $_ -notin $pinned })
+                $before    = @($remaining | Select-Object -First 2)
+                $after     = @($remaining | Select-Object -Skip  2)
+                $scalarCols = [System.Collections.Generic.List[string]]::new()
+                foreach ($c in ($before + $pinned + $after)) { $scalarCols.Add($c) }
+            }
+
+            [void]$bodySb.Append("<div class='tw'><table><thead><tr>")
+            foreach ($c in $scalarCols) { [void]$bodySb.Append("<th>$([System.Net.WebUtility]::HtmlEncode($c))</th>") }
+            if ($nestedCols.Count -gt 0) { [void]$bodySb.Append("<th class='detail-hdr'>Details</th>") }
+            [void]$bodySb.Append("</tr></thead><tbody>")
+
+            $rowIdx = 0
+            foreach ($item in $items) {
+                $cls = if ($rowIdx % 2 -eq 1) { ' class="a"' } else { '' }
+                [void]$bodySb.Append("<tr$cls>")
+                foreach ($c in $scalarCols) {
+                    $v = $item.$c
+                    [void]$bodySb.Append("<td>$(if($null -eq $v){''}else{[System.Net.WebUtility]::HtmlEncode("$v")})</td>")
+                }
+                if ($nestedCols.Count -gt 0) {
+                    [void]$bodySb.Append("<td class='detail-cell'>")
+                    foreach ($nc in $nestedCols) {
+                        $nested = @($item.$nc)
+                        if ($nested.Count -gt 0) {
+                            $label = [System.Net.WebUtility]::HtmlEncode($nc)
+                            [void]$bodySb.Append("<details><summary>$label ($($nested.Count))</summary>")
+                            [void]$bodySb.Append((& $buildSimpleTable $nested 'sub'))
+                            [void]$bodySb.Append("</details>")
+                        }
+                    }
+                    [void]$bodySb.Append("</td>")
+                }
+                [void]$bodySb.Append("</tr>")
+                $rowIdx++
+            }
+            [void]$bodySb.Append("</tbody></table></div></section>")
+        }
+
+        $hasContent = $false
+
+        if ($rdbOverview.IsChecked -and $PerformanceReport.Overview) {
+            $hasContent = $true
+            $ovHtml = [System.Net.WebUtility]::HtmlEncode(($PerformanceReport.Overview | Out-String).Trim())
+            [void]$bodySb.Append("<section><h2>Overview</h2><pre>$ovHtml</pre></section>")
+        }
+
+        $tableOpts = @(
+            @{ C = $rdbTopfiles;      P = 'TopFiles';      T = 'Top Files (Top 10)' }
+            @{ C = $rdbTopPaths;      P = 'TopPaths';      T = 'Top Paths (Top 10)' }
+            @{ C = $rdbTopExtensions; P = 'TopExtensions'; T = 'Top Extensions (Top 10)' }
+            @{ C = $rdbTopProcess;    P = 'TopProcesses';  T = 'Top Processes (Top 10)' }
+            @{ C = $rdbTopScans; P = 'TopScans'; T = 'Top Scans (Top 10)'; Col3 = @('ScanType','Reason','SkipReason') }
+        )
+        foreach ($opt in $tableOpts) {
+            if ($opt.C.IsChecked -ne $true) { continue }
+            $d = $PerformanceReport.($opt.P)
+            if ($d) { $hasContent = $true; & $buildTableHtml $opt.T $d $(if ($opt.Col3) { $opt.Col3 } else { @() }) }
+        }
+
+        if (-not $hasContent) {
+            [System.Windows.MessageBox]::Show("No report sections had data. Please select options and try again.", 'No Data', 'OK', 'Warning')
+            $MainWindow1.Cursor = [System.Windows.Input.Cursors]::Arrow
+            return
+        }
+
+        $ts      = (Get-Date).ToString("yyyy-MM-dd HH:mm:ss")
+        $srcName = [System.Net.WebUtility]::HtmlEncode([System.IO.Path]::GetFileName($etlPath))
+        $body    = $bodySb.ToString()
+
+        $html = @"
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Defender Performance Report</title>
+<style>
+:root{--bg:#f2ede6;--card:#faf8f4;--txt:#2a211a;--bdr:#d8cfc4;--hbg:#3a3028;--hfg:#ede5d8;--alt:#f5f1eb;--pre:#f0ece5;--ac:#7a5428}
+@media(prefers-color-scheme:dark){:root{--bg:#1a1814;--card:#222018;--txt:#d8d0c4;--bdr:#38342c;--hbg:#141210;--hfg:#c8b898;--alt:#1e1c16;--pre:#191714;--ac:#c09040}}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--txt);font:14px/1.5 'Segoe UI',system-ui,sans-serif;min-height:100vh}
+header{background:var(--hbg);color:var(--hfg);padding:18px 28px 16px;border-bottom:2px solid var(--ac)}
+header h1{font-size:19px;font-weight:600;letter-spacing:.2px}
+header p{font-size:12px;opacity:.55;margin-top:4px;font-family:Consolas,monospace}
+main{padding:24px 28px;display:flex;flex-direction:column;gap:20px;max-width:1500px;margin:0 auto}
+section{background:var(--card);border:1px solid var(--bdr);border-radius:6px;overflow:hidden;box-shadow:0 1px 4px #00000009}
+section h2{background:var(--hbg);color:var(--hfg);font-size:13px;font-weight:600;padding:9px 16px;letter-spacing:.15px;text-transform:uppercase}
+.tw{overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:13px}
+th{background:var(--hbg);color:var(--hfg);text-align:left;padding:7px 12px;font-weight:600;white-space:nowrap;border-right:1px solid #ffffff0e;cursor:pointer;user-select:none;font-size:12px}
+th:hover{filter:brightness(1.35)}
+th:last-child{border-right:none}
+td{padding:6px 12px;border-bottom:1px solid var(--bdr);font:12px/1.4 Consolas,monospace;white-space:nowrap}
+tr.a td{background:var(--alt)}
+tr:hover td{background:#7a542814}
+pre{padding:16px;font:12px/1.6 Consolas,monospace;white-space:pre-wrap;word-break:break-all;background:var(--pre);color:var(--txt)}
+p.empty{padding:12px 16px;font-style:italic;opacity:.45}
+th.detail-hdr{min-width:220px}
+td.detail-cell{vertical-align:top;padding:4px 8px;white-space:normal}
+details{margin:3px 0}
+details summary{cursor:pointer;font:600 11px/1.4 'Segoe UI',sans-serif;color:var(--ac);padding:2px 4px;border-radius:3px;list-style:none}
+details summary::-webkit-details-marker{display:none}
+details summary::before{content:'\25B6\00A0';font-size:9px;opacity:.6}
+details[open] summary::before{content:'\25BC\00A0'}
+details summary:hover{text-decoration:underline}
+details[open] summary{margin-bottom:4px}
+table.sub{width:auto;min-width:300px;margin:0;font-size:11px;border:1px solid var(--bdr);border-radius:4px;overflow:hidden}
+table.sub th{font-size:10px;padding:4px 8px;background:var(--hbg)}
+table.sub td{padding:3px 8px;font-size:11px}
+</style>
+</head>
+<body>
+<header>
+  <h1>&#128737;&#65039; Defender AV &mdash; Performance Report</h1>
+  <p>Source: $srcName &nbsp;&bull;&nbsp; Generated: $ts</p>
+</header>
+<main>
+$body
+</main>
+<script>
+document.querySelectorAll('th').forEach(function(th){
+  th.addEventListener('click',function(){
+    var tbl=th.closest('table'),idx=Array.from(th.parentNode.children).indexOf(th);
+    var asc=th.dataset.asc!=='1'; th.dataset.asc=asc?'1':'';
+    var rows=Array.from(tbl.querySelectorAll('tbody tr'));
+    rows.sort(function(a,b){
+      var av=a.cells[idx]?a.cells[idx].textContent.trim():'';
+      var bv=b.cells[idx]?b.cells[idx].textContent.trim():'';
+      var an=parseFloat(av.replace(/[^0-9.\-]/g,'')),bn=parseFloat(bv.replace(/[^0-9.\-]/g,''));
+      if(!isNaN(an)&&!isNaN(bn))return asc?an-bn:bn-an;
+      return asc?av.localeCompare(bv):bv.localeCompare(av);
+    });
+    var tb=tbl.querySelector('tbody');
+    rows.forEach(function(r,i){r.className=i%2===1?'a':'';tb.appendChild(r);});
+  });
+});
+</script>
+</body>
+</html>
+"@
+
+        $outPath = [System.IO.Path]::Combine(
+            [System.IO.Path]::GetTempPath(),
+            "DefenderPerfReport_$(Get-Date -Format 'yyyyMMdd_HHmmss').html"
+        )
+        [System.IO.File]::WriteAllText($outPath, $html, [System.Text.Encoding]::UTF8)
+        Start-Process $outPath
+
+        $MainWindow1.Cursor = [System.Windows.Input.Cursors]::Arrow
+    }
+    catch {
+        $MainWindow1.Cursor = [System.Windows.Input.Cursors]::Arrow
+        [System.Windows.MessageBox]::Show($_.Exception.Message, 'Error', 'OK', 'Error')
     }
 })
 
