@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-#
+# v3.1
 # mdatp-perf-troubleshoot.sh
 #
 # Interactive menu wrapping the diagnostic steps described in:
