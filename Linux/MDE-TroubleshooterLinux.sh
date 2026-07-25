@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# v3.1
+#
 # mdatp-perf-troubleshoot.sh
 #
 # Interactive menu wrapping the diagnostic steps described in:
@@ -339,6 +339,34 @@ enable_all_statistics() {
     log_warn "Remember to set log level back to 'info' when you finish your investigation (menu 2 > option 5)."
 }
 
+# ---------- Disable ALL statistics ----------
+
+disable_all_statistics() {
+    require_mdatp || return 1
+    echo ""
+    log_info "This will disable every statistics-gathering feature that was enabled for troubleshooting:"
+    echo "  - Real-time-protection-statistics → disabled"
+    echo "  - Log level                       → restored to 'info'"
+    echo ""
+    echo "  Note: Real-time protection itself will NOT be touched."
+    echo ""
+    read -rp "Proceed? [y/N]: " confirm
+    if [[ ! "${confirm}" =~ ^[Yy]$ ]]; then
+        log_warn "Cancelled."
+        return 0
+    fi
+
+    log_info "Step 1/2: Disabling real-time-protection-statistics..."
+    run_maybe_sudo mdatp config real-time-protection-statistics --value disabled
+    log_ok "RTP statistics disabled."
+
+    log_info "Step 2/2: Restoring log level to 'info'..."
+    require_root && run_maybe_sudo mdatp log level set --level info
+    log_ok "Log level restored to info."
+
+    log_ok "All statistics-related features have been disabled."
+}
+
 # ---------- Diagnostics summary / run-all collection ----------
 
 run_all_collections() {
@@ -500,9 +528,10 @@ main_menu() {
         echo "  2) Hot Event Sources menu"
         echo "  3) eBPF Statistics menu"
         echo "  4) Enable ALL statistics features"
-        echo "  5) Run ALL diagnostic collections now (RTP + Hot Event Sources + eBPF)"
-        echo "  6) Export session results to HTML report"
-        echo "  7) Open reports folder location"
+        echo "  5) Disable ALL statistics features"
+        echo "  6) Run ALL diagnostic collections now (RTP + Hot Event Sources + eBPF)"
+        echo "  7) Export session results to HTML report"
+        echo "  8) Open reports folder location"
         echo "  0) Exit"
         echo ""
         read -rp "Select an option: " choice
@@ -510,10 +539,11 @@ main_menu() {
             1) menu_rtp_statistics ;;
             2) menu_hot_event_sources ;;
             3) menu_ebpf_statistics ;;
-            4) capture_step "Enable All Statistics Features" "enable-all" enable_all_statistics; press_enter ;;
-            5) run_all_collections; press_enter ;;
-            6) export_html_report; press_enter ;;
-            7) ensure_report_dir; log_info "Reports are saved to: ${REPORT_DIR}"; press_enter ;;
+            4) capture_step "Enable All Statistics Features"  "enable-all"  enable_all_statistics;  press_enter ;;
+            5) capture_step "Disable All Statistics Features" "disable-all" disable_all_statistics; press_enter ;;
+            6) run_all_collections; press_enter ;;
+            7) export_html_report; press_enter ;;
+            8) ensure_report_dir; log_info "Reports are saved to: ${REPORT_DIR}"; press_enter ;;
             0)
                 if [[ "${#SESSION_LABELS[@]}" -gt 0 ]]; then
                     read -rp "Export HTML report before exiting? [y/N]: " export_confirm
