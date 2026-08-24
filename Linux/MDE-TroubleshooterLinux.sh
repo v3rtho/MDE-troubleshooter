@@ -77,6 +77,19 @@ require_root() {
 
 ensure_report_dir() {
     mkdir -p "${REPORT_DIR}"
+    chmod 755 "${REPORT_DIR}" 2>/dev/null
+    fix_ownership "${REPORT_DIR}"
+}
+
+# When the script runs under sudo, anything it creates is owned by root and
+# lives under the invoking user's home dir (see REPORT_DIR above) -- leaving
+# that user unable to open their own reports afterwards. Hand ownership back
+# to them and keep things world-readable wherever we can.
+fix_ownership() {
+    local target="$1"
+    if [[ -n "${SUDO_USER:-}" ]]; then
+        chown "${SUDO_USER}:$(id -gn "${SUDO_USER}")" "${target}" 2>/dev/null
+    fi
 }
 
 # Run a command, optionally with sudo if not root
@@ -110,6 +123,8 @@ capture_step() {
     # capture_step returned and export_html_report ran).
     "${func}" "$@" 2>&1 | tee "${file}"
     sed -i -r 's/\x1b\[[0-9;]*m//g' "${file}"
+    chmod 644 "${file}" 2>/dev/null
+    fix_ownership "${file}"
 
     SESSION_LABELS+=("${label}")
     SESSION_FILES+=("${file}")
@@ -164,6 +179,8 @@ rtp_collect_statistics() {
     local out_file="${REPORT_DIR}/rtp-statistics-raw-${TIMESTAMP}.json"
     log_info "Collecting current RTP statistics (JSON output)..."
     mdatp diagnostic real-time-protection-statistics --output json | tee "${out_file}"
+    chmod 644 "${out_file}" 2>/dev/null
+    fix_ownership "${out_file}"
     log_ok "Saved raw JSON output to: ${out_file}"
 }
 
@@ -291,6 +308,8 @@ ebpf_collect_statistics() {
     local out_file="${REPORT_DIR}/ebpf-statistics-raw-${TIMESTAMP}.txt"
     log_info "Collecting eBPF statistics. This monitors the system for ~20 seconds..."
     mdatp diagnostic ebpf-statistics | tee "${out_file}"
+    chmod 644 "${out_file}" 2>/dev/null
+    fix_ownership "${out_file}"
     log_ok "Saved output to: ${out_file}"
     log_info "Check 'Top initiator paths' for the process generating the most syscalls,"
     log_info "and 'Top syscall ids' for which syscalls dominate."
@@ -593,6 +612,9 @@ HTML_HEAD
         echo "<a href=\"https://learn.microsoft.com/en-us/defender-endpoint/linux-support-perf\" target=\"_blank\">learn.microsoft.com/en-us/defender-endpoint/linux-support-perf</a></footer>"
         echo "</body></html>"
     } > "${html_file}"
+
+    chmod 644 "${html_file}" 2>/dev/null
+    fix_ownership "${html_file}"
 
     log_ok "HTML report saved to: ${html_file}"
     log_info "Open it with, e.g.: xdg-open \"${html_file}\"  (or copy it to a machine with a GUI/browser)."
