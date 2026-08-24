@@ -103,8 +103,13 @@ capture_step() {
     local file="${REPORT_DIR}/${fname}-${TIMESTAMP}-$$-${RANDOM}.log"
 
     # Run the real function; tee shows live colored output on the terminal
-    # while a process substitution strips ANSI codes for the saved file.
-    "${func}" "$@" 2>&1 | tee >(sed -u -r 's/\x1b\[[0-9;]*m//g' > "${file}")
+    # while also saving it to disk. tee is part of the pipeline so the shell
+    # waits for it before continuing -- unlike `tee >(cmd)`, which can return
+    # before the substituted command finishes writing (most visible on long
+    # steps like eBPF statistics, where the file was still empty by the time
+    # capture_step returned and export_html_report ran).
+    "${func}" "$@" 2>&1 | tee "${file}"
+    sed -i -r 's/\x1b\[[0-9;]*m//g' "${file}"
 
     SESSION_LABELS+=("${label}")
     SESSION_FILES+=("${file}")
@@ -367,6 +372,88 @@ disable_all_statistics() {
     log_ok "All statistics-related features have been disabled."
 }
 
+# ---------- Full Protection Disable ----------
+
+full_protection_disable() {
+    require_mdatp || return 1
+    echo ""
+    log_warn "This will FULLY DISABLE Microsoft Defender for Endpoint protection on this device:"
+    echo "  - Real-time protection → disabled"
+    echo "  - Behavior monitoring  → disabled"
+    echo "  - Passive mode         → enabled"
+    echo ""
+    log_warn "The device will be left effectively unprotected. Only use this for isolated troubleshooting."
+    read -rp "Proceed? [y/N]: " confirm
+    if [[ ! "${confirm}" =~ ^[Yy]$ ]]; then
+        log_warn "Cancelled."
+        return 0
+    fi
+
+    log_info "Step 1/3: Disabling real-time protection..."
+    run_maybe_sudo mdatp config real-time-protection --value disabled
+
+    log_info "Step 2/3: Disabling behavior monitoring..."
+    run_maybe_sudo mdatp config behavior-monitoring --value disabled
+
+    log_info "Step 3/3: Enabling passive mode..."
+    run_maybe_sudo mdatp config passive-mode --value enabled
+
+    log_ok "Full protection disable complete."
+    log_warn "Remember to re-enable protection when you finish troubleshooting."
+}
+
+# ---------- Performance Tuning ----------
+
+performance_tuning() {
+    require_mdatp || return 1
+    echo ""
+    log_info "This will apply the following performance-tuning settings:"
+    echo "  - Cloud diagnostic level              → normal"
+    echo "  - Cloud block level                   → normal"
+    echo "  - Cloud automatic sample submission    → none"
+    echo "  - Archive scanning                     → disabled"
+    echo "  - Filesystem exclusions added for      → cifs, fuse, nfs, nfs4, smb"
+    echo "  - File hash computation                → disabled"
+    echo ""
+    read -rp "Proceed? [y/N]: " confirm
+    if [[ ! "${confirm}" =~ ^[Yy]$ ]]; then
+        log_warn "Cancelled."
+        return 0
+    fi
+
+    log_info "Step 1/10: Setting cloud diagnostic level to 'normal'..."
+    run_maybe_sudo mdatp config cloud-diagnostic-level --value normal
+
+    log_info "Step 2/10: Setting cloud block level to 'normal'..."
+    run_maybe_sudo mdatp config cloud-block-level --value normal
+
+    log_info "Step 3/10: Disabling cloud automatic sample submission..."
+    run_maybe_sudo mdatp config cloud-automatic-sample-submission --value none
+
+    log_info "Step 4/10: Disabling archive scanning..."
+    run_maybe_sudo mdatp config scan-archives --value disabled
+
+    log_info "Step 5/10: Adding filesystem exclusion for 'cifs'..."
+    run_maybe_sudo mdatp exclusion fs-type add --fstype cifs
+
+    log_info "Step 6/10: Adding filesystem exclusion for 'fuse'..."
+    run_maybe_sudo mdatp exclusion fs-type add --fstype fuse
+
+    log_info "Step 7/10: Adding filesystem exclusion for 'nfs'..."
+    run_maybe_sudo mdatp exclusion fs-type add --fstype nfs
+
+    log_info "Step 8/10: Adding filesystem exclusion for 'nfs4'..."
+    run_maybe_sudo mdatp exclusion fs-type add --fstype nfs4
+
+    log_info "Step 9/10: Adding filesystem exclusion for 'smb'..."
+    run_maybe_sudo mdatp exclusion fs-type add --fstype smb
+
+    log_info "Step 10/10: Disabling file hash computation..."
+    run_maybe_sudo mdatp config file-hash-computation --value disabled
+
+    log_ok "Performance tuning complete."
+}
+
 # ---------- Diagnostics summary / run-all collection ----------
 
 run_all_collections() {
@@ -529,9 +616,11 @@ main_menu() {
         echo "  3) eBPF Statistics menu"
         echo "  4) Enable ALL statistics features"
         echo "  5) Disable ALL statistics features"
-        echo "  6) Run ALL diagnostic collections now (RTP + Hot Event Sources + eBPF)"
-        echo "  7) Export session results to HTML report"
-        echo "  8) Open reports folder location"
+        echo "  6) Full Protection Disable (RTP + Behavior Monitoring off, Passive Mode on)"
+        echo "  7) Performance Tuning (cloud levels, archive scan, fs-type exclusions, file hashing)"
+        echo "  8) Run ALL diagnostic collections now (RTP + Hot Event Sources + eBPF)"
+        echo "  9) Export session results to HTML report"
+        echo " 10) Open reports folder location"
         echo "  0) Exit"
         echo ""
         read -rp "Select an option: " choice
@@ -541,9 +630,11 @@ main_menu() {
             3) menu_ebpf_statistics ;;
             4) capture_step "Enable All Statistics Features"  "enable-all"  enable_all_statistics;  press_enter ;;
             5) capture_step "Disable All Statistics Features" "disable-all" disable_all_statistics; press_enter ;;
-            6) run_all_collections; press_enter ;;
-            7) export_html_report; press_enter ;;
-            8) ensure_report_dir; log_info "Reports are saved to: ${REPORT_DIR}"; press_enter ;;
+            6) capture_step "Full Protection Disable" "full-protection-disable" full_protection_disable; press_enter ;;
+            7) capture_step "Performance Tuning" "performance-tuning" performance_tuning; press_enter ;;
+            8) run_all_collections; press_enter ;;
+            9) export_html_report; press_enter ;;
+            10) ensure_report_dir; log_info "Reports are saved to: ${REPORT_DIR}"; press_enter ;;
             0)
                 if [[ "${#SESSION_LABELS[@]}" -gt 0 ]]; then
                     read -rp "Export HTML report before exiting? [y/N]: " export_confirm
