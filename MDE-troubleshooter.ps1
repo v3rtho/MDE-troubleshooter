@@ -1,5 +1,5 @@
 # Author: Thomas Verheyden
-# New release: 13.07.2025
+# New release: 28.08.2025
 # Version: 3.1.0
 # Blogpost: https://vertho.tech/2023/06/30/tool-mde-troubleshooter-is-born/
 # Website: vertho.tech
@@ -355,7 +355,8 @@ It offers a centralized view of the security configuration, log files, updates, 
                             <Label Content="Defender AV Exclusions" FontSize="14" FontWeight="Bold" Foreground="#E8E8E8" Margin="0,0,0,10"/>
                             <TextBlock Text="Exclusions allow you to exclude specific files, folders, processes, or file extensions from Microsoft Defender Antivirus scanning. View the current exclusion configuration on this system." TextWrapping="Wrap" Margin="0,0,0,15" FontFamily="Segoe UI" Foreground="#666"/>
                             <WrapPanel>
-                                <Button Name="btnExclusions" Content="Show Exclusions" Style="{StaticResource ActionButton}" Width="180"/>
+                                <Button Name="btnExclusions"       Content="Show Exclusions"   Style="{StaticResource ActionButton}" Width="180"/>
+                                <Button Name="btnRemoveExclusions" Content="Remove Exclusions" Style="{StaticResource ActionButton}" Width="180" Margin="10,0,0,0" Background="#7A2020" BorderBrush="#A03030"/>
                             </WrapPanel>
                             <TextBlock Text="Note: Exclusions can be configured via Group Policy, Intune, or PowerShell. Use exclusions carefully as they can reduce protection." TextWrapping="Wrap" Margin="0,15,0,0" FontFamily="Segoe UI" Foreground="#888" FontStyle="Italic"/>
                         </StackPanel>
@@ -2765,7 +2766,7 @@ $btnCheckForLastestUpdate.Add_Click({
 $btnShowDefenderAVLogs.Add_Click({
     try {
         $MainWindow1.Cursor = [System.Windows.Input.Cursors]::Wait
-        $DefenderLogs = Get-WinEvent -LogName "Microsoft-Windows-Windows Defender/Operational" -MaxEvents 50 -ErrorAction Stop |
+        $DefenderLogs = Get-WinEvent -LogName "Microsoft-Windows-Windows Defender/Operational" -MaxEvents 100 -ErrorAction Stop |
             Select-Object TimeCreated, Id, LevelDisplayName, Message
         $MainWindow1.Cursor = [System.Windows.Input.Cursors]::Arrow
         Show-LogWindow -LogData $DefenderLogs -Title "Defender AV Logs" -LogType "Defender"
@@ -3172,9 +3173,10 @@ $btnExportReportHtml.Add_Click({
         # Build a simple HTML table from an array of objects; returns the HTML string
         $buildSimpleTable = { param([object[]]$rows, [string]$extraClass)
             if ($rows.Count -eq 0) { return '' }
+            $fi = $rows | Where-Object { $null -ne $_ } | Select-Object -First 1
+            if ($null -eq $fi) { return '' }
             $cls = if ($extraClass) { " class='$extraClass'" } else { '' }
             $sb2 = [System.Text.StringBuilder]::new()
-            $fi  = $rows[0]
             $cs  = $fi | Get-Member -MemberType Property,NoteProperty | Select-Object -ExpandProperty Name |
                    Where-Object { & $isScalar ($fi.$_) }
             [void]$sb2.Append("<table$cls><thead><tr>")
@@ -3207,7 +3209,12 @@ $btnExportReportHtml.Add_Click({
             # Split members into scalar columns and nested-collection columns.
             # Check across all items for the first non-null value so we don't miss
             # nested props that happen to be null on the first row.
-            $allMembers = $items[0] | Get-Member -MemberType Property,NoteProperty | Select-Object -ExpandProperty Name
+            $firstItem  = $items | Where-Object { $null -ne $_ } | Select-Object -First 1
+            if ($null -eq $firstItem) {
+                [void]$bodySb.Append("<p class='empty'>No data</p></section>")
+                return
+            }
+            $allMembers = $firstItem | Get-Member -MemberType Property,NoteProperty | Select-Object -ExpandProperty Name
             $scalarCols = [System.Collections.Generic.List[string]]::new()
             $nestedCols = [System.Collections.Generic.List[string]]::new()
             foreach ($m in $allMembers) {
@@ -3345,7 +3352,8 @@ document.querySelectorAll('th').forEach(function(th){
   th.addEventListener('click',function(){
     var tbl=th.closest('table'),idx=Array.from(th.parentNode.children).indexOf(th);
     var asc=th.dataset.asc!=='1'; th.dataset.asc=asc?'1':'';
-    var rows=Array.from(tbl.querySelectorAll('tbody tr'));
+    var tb=tbl.querySelector(':scope > tbody');
+    var rows=Array.from(tb.querySelectorAll(':scope > tr'));
     rows.sort(function(a,b){
       var av=a.cells[idx]?a.cells[idx].textContent.trim():'';
       var bv=b.cells[idx]?b.cells[idx].textContent.trim():'';
@@ -3353,7 +3361,6 @@ document.querySelectorAll('th').forEach(function(th){
       if(!isNaN(an)&&!isNaN(bn))return asc?an-bn:bn-an;
       return asc?av.localeCompare(bv):bv.localeCompare(av);
     });
-    var tb=tbl.querySelector('tbody');
     rows.forEach(function(r,i){r.className=i%2===1?'a':'';tb.appendChild(r);});
   });
 });
@@ -3419,9 +3426,54 @@ $btnExclusions.Add_Click({
             [System.Windows.MessageBox]::Show("No Defender AV exclusions found!", 'Exclusions', 'OK', 'Information')
         }
     }
-    catch { 
+    catch {
         $MainWindow1.Cursor = [System.Windows.Input.Cursors]::Arrow
-        [System.Windows.MessageBox]::Show($Error[0], 'Error', 'OK', 'Error') 
+        [System.Windows.MessageBox]::Show($Error[0], 'Error', 'OK', 'Error')
+    }
+})
+
+$btnRemoveExclusions.Add_Click({
+    try {
+        $MainWindow1.Cursor = [System.Windows.Input.Cursors]::Wait
+        $pref = Get-MpPreference
+        $MainWindow1.Cursor = [System.Windows.Input.Cursors]::Arrow
+
+        $paths  = @($pref.ExclusionPath      | Where-Object { $_ })
+        $exts   = @($pref.ExclusionExtension | Where-Object { $_ })
+        $procs  = @($pref.ExclusionProcess   | Where-Object { $_ })
+        $ips    = @($pref.ExclusionIpAddress  | Where-Object { $_ })
+        $total  = $paths.Count + $exts.Count + $procs.Count + $ips.Count
+
+        if ($total -eq 0) {
+            [System.Windows.MessageBox]::Show("No locally configured exclusions found - nothing to remove.", 'Remove Exclusions', 'OK', 'Information')
+            return
+        }
+
+        $summary  = "This will permanently remove ALL locally configured Defender AV exclusions:`n`n"
+        $summary += "  Path exclusions      : $($paths.Count)`n"
+        $summary += "  Extension exclusions : $($exts.Count)`n"
+        $summary += "  Process exclusions   : $($procs.Count)`n"
+        $summary += "  IP address exclusions: $($ips.Count)`n"
+        $summary += "`nTotal: $total exclusion(s)`n`n"
+        $summary += "Note: Exclusions pushed by Group Policy or Intune will return on the next policy refresh and cannot be removed here.`n`n"
+        $summary += "Are you sure you want to continue?"
+
+        $confirm = [System.Windows.MessageBox]::Show($summary, 'Remove All Exclusions', 'YesNo', 'Warning')
+        if ($confirm -ne 'Yes') { return }
+
+        $MainWindow1.Cursor = [System.Windows.Input.Cursors]::Wait
+
+        if ($paths.Count -gt 0)  { Remove-MpPreference -ExclusionPath      $paths  -ErrorAction Stop }
+        if ($exts.Count -gt 0)   { Remove-MpPreference -ExclusionExtension $exts   -ErrorAction Stop }
+        if ($procs.Count -gt 0)  { Remove-MpPreference -ExclusionProcess   $procs  -ErrorAction Stop }
+        if ($ips.Count -gt 0)    { Remove-MpPreference -ExclusionIpAddress  $ips    -ErrorAction Stop }
+
+        $MainWindow1.Cursor = [System.Windows.Input.Cursors]::Arrow
+        [System.Windows.MessageBox]::Show("Successfully removed $total exclusion(s).", 'Remove Exclusions', 'OK', 'Information')
+    }
+    catch {
+        $MainWindow1.Cursor = [System.Windows.Input.Cursors]::Arrow
+        [System.Windows.MessageBox]::Show("Failed to remove exclusions:`n`n$($_.Exception.Message)`n`nMake sure the application is running as Administrator.", 'Error', 'OK', 'Error')
     }
 })
 
@@ -3573,7 +3625,7 @@ $btnShowFirewallLogs.Add_Click({
             return
         }
 
-        # Read log file — skip comment lines starting with #
+        # Read log file - skip comment lines starting with #
         $rawLines = Get-Content -Path $logPath -ErrorAction Stop | Where-Object { $_ -notmatch '^#' -and $_.Trim() -ne '' }
 
         if ($rawLines.Count -eq 0) {
