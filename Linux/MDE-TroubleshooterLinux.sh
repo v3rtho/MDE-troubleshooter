@@ -226,103 +226,21 @@ rtp_collect_statistics() {
     log_ok "Saved raw JSON output to: ${out_file}"
     register_step_data_file "${out_file}"
     echo ""
-    view_json_filtered "${out_file}"
+    print_json_pretty "${out_file}"
 }
 
-# Interactively view a JSON file: pretty-print, sort by a field (desc), or
-# filter rows by a substring. Works whether the JSON root is an array of
-# records (RTP statistics) or an object wrapping one, e.g. {"eventSource":[...]}
-# (the same shape mdatp uses for its Hot Event Sources report).
-# Falls back to a plain pretty-print (or raw cat) when jq isn't available,
-# since sort/filter both rely on jq to actually parse the structure.
-view_json_filtered() {
+# Pretty-print a JSON file to the console. No prompts: sorting/filtering
+# happens in the exported HTML instead (click a column header to sort), so
+# the terminal side just needs to show the data was collected correctly.
+print_json_pretty() {
     local file="$1"
-
-    if ! command -v jq >/dev/null 2>&1; then
-        log_warn "'jq' is not installed; showing raw JSON as-is. Install jq to enable pretty-print/sort/filter."
-        if command -v python3 >/dev/null 2>&1; then
-            python3 -m json.tool "${file}" 2>/dev/null || cat "${file}"
-        else
-            cat "${file}"
-        fi
-        return 0
-    fi
-
-    if ! jq empty "${file}" 2>/dev/null; then
-        log_warn "Output doesn't look like valid JSON; showing it raw."
+    if command -v jq >/dev/null 2>&1 && jq empty "${file}" 2>/dev/null; then
+        jq '.' "${file}"
+    elif command -v python3 >/dev/null 2>&1; then
+        python3 -m json.tool "${file}" 2>/dev/null || cat "${file}"
+    else
         cat "${file}"
-        return 0
     fi
-
-    # Find the path to the list of records: the root itself if it's an
-    # array, otherwise the first field on the root object whose value is
-    # an array. Falls back to "" (no list found -> sort/filter unavailable).
-    local records_path
-    records_path="$(jq -r '
-        if type == "array" then "."
-        else
-            (to_entries | map(select(.value | type == "array")) | first) as $e
-            | if $e then ".\($e.key)" else "" end
-        end
-    ' "${file}")"
-
-    local available_keys=""
-    if [[ -n "${records_path}" ]]; then
-        available_keys="$(jq -r "${records_path} | if length > 0 then (.[0] | keys_unsorted | join(\", \")) else \"\" end" "${file}" 2>/dev/null)"
-    fi
-
-    echo "  How would you like to view the JSON output?"
-    echo "    1) Pretty-printed (default)"
-    if [[ -n "${available_keys}" ]]; then
-        echo "    2) Sorted by a field, descending  (available fields: ${available_keys})"
-        echo "    3) Filtered to rows containing a text value"
-    fi
-    read -rp "  Select an option [1]: " view_choice
-    view_choice="${view_choice:-1}"
-
-    case "${view_choice}" in
-        2)
-            if [[ -z "${available_keys}" ]]; then
-                log_warn "No sortable list of records found in this JSON; showing pretty-printed output instead."
-                jq '.' "${file}"
-                return 0
-            fi
-            local field top_n filter_body full_filter
-            read -rp "  Sort by which field?: " field
-            read -rp "  Limit to top N rows (blank = show all): " top_n
-            filter_body='sort_by(try (.[$f] | tonumber) catch (.[$f] // "")) | reverse'
-            if [[ "${top_n}" =~ ^[0-9]+$ ]]; then
-                filter_body="${filter_body} | .[0:${top_n}]"
-            fi
-            if [[ "${records_path}" == "." ]]; then
-                full_filter="${filter_body}"
-            else
-                full_filter="${records_path} |= (${filter_body})"
-            fi
-            jq --arg f "${field}" "${full_filter}" "${file}" 2>/dev/null \
-                || { log_warn "Could not sort by '${field}'; showing pretty-printed output instead."; jq '.' "${file}"; }
-            ;;
-        3)
-            if [[ -z "${available_keys}" ]]; then
-                log_warn "No filterable list of records found in this JSON; showing pretty-printed output instead."
-                jq '.' "${file}"
-                return 0
-            fi
-            local text filter_body full_filter
-            read -rp "  Only show rows where any field contains (case-insensitive): " text
-            filter_body='map(select(any(.[]; (tostring | test($t; "i")))))'
-            if [[ "${records_path}" == "." ]]; then
-                full_filter="${filter_body}"
-            else
-                full_filter="${records_path} |= (${filter_body})"
-            fi
-            jq --arg t "${text}" "${full_filter}" "${file}" 2>/dev/null \
-                || { log_warn "Filter failed; showing pretty-printed output instead."; jq '.' "${file}"; }
-            ;;
-        *)
-            jq '.' "${file}"
-            ;;
-    esac
 }
 
 rtp_top_offenders() {
@@ -393,8 +311,8 @@ hes_set_info() {
 }
 
 # Run one of the "hot-event-sources" sub-commands, then try to locate the
-# JSON report mdatp writes as a side effect and offer the same
-# pretty-print/sort/filter view used for RTP statistics.
+# JSON report mdatp writes as a side effect and pretty-print it the same
+# way RTP statistics does.
 #
 # "mdatp diagnostic hot-event-sources" is a live monitor (it redraws the
 # screen every second and only stops on Ctrl-C/SIGINT) -- it never finishes
@@ -438,7 +356,7 @@ hes_collect() {
     log_info "Saved a copy to: ${saved_copy}"
     register_step_data_file "${saved_copy}"
     echo ""
-    view_json_filtered "${saved_copy}"
+    print_json_pretty "${saved_copy}"
 }
 
 hes_collect_files() {
@@ -499,6 +417,7 @@ ebpf_collect_statistics() {
     chmod 644 "${out_file}" 2>/dev/null
     fix_ownership "${out_file}"
     log_ok "Saved output to: ${out_file}"
+    register_step_data_file "${out_file}"
     log_info "Check 'Top initiator paths' for the process generating the most syscalls,"
     log_info "and 'Top syscall ids' for which syscalls dominate."
 }
@@ -802,6 +721,59 @@ try_render_block_table() {
     ' "${file}"
 }
 
+# Detects mdatp's eBPF statistics output -- one or more sections shaped like
+#   Top initiator paths:
+#   /usr/bin/foo : 902
+#   ...
+# (a header line ending in ":" followed by "item : count" rows) and renders
+# each section as its own labeled, sortable HTML table. Prints nothing and
+# returns 1 if no such section is found, so the caller falls back to <pre>.
+try_render_ebpf_table() {
+    local file="$1"
+    grep -qE '^[A-Za-z][A-Za-z0-9 ]*:[[:space:]]*$' "${file}" 2>/dev/null || return 1
+
+    awk '
+        function htmlesc(s) {
+            gsub(/&/, "\\&amp;", s)
+            gsub(/</, "\\&lt;", s)
+            gsub(/>/, "\\&gt;", s)
+            return s
+        }
+        BEGIN { nsections = 0 }
+        /^[A-Za-z][A-Za-z0-9 ]*:[[:space:]]*$/ {
+            nsections++
+            t = $0
+            sub(/:[[:space:]]*$/, "", t)
+            title[nsections] = t
+            nrows[nsections] = 0
+            next
+        }
+        nsections > 0 && index($0, " : ") > 0 {
+            idx = index($0, " : ")
+            key = substr($0, 1, idx - 1)
+            val = substr($0, idx + 3)
+            nrows[nsections]++
+            rowkey[nsections, nrows[nsections]] = key
+            rowval[nsections, nrows[nsections]] = val
+        }
+        END {
+            if (nsections == 0) { exit 1 }
+            any = 0
+            for (s = 1; s <= nsections; s++) {
+                if (nrows[s] == 0) { continue }
+                any = 1
+                print "<h4 class=\"table-section\">" htmlesc(title[s]) "</h4>"
+                print "<table class=\"sortable\"><thead><tr><th>Item</th><th>Count</th></tr></thead><tbody>"
+                for (r = 1; r <= nrows[s]; r++) {
+                    print "<tr><td>" htmlesc(rowkey[s, r]) "</td><td>" htmlesc(rowval[s, r]) "</td></tr>"
+                }
+                print "</tbody></table>"
+            }
+            if (!any) { exit 1 }
+        }
+    ' "${file}"
+}
+
 export_html_report() {
     if [[ "${#SESSION_LABELS[@]}" -eq 0 ]]; then
         log_warn "No checks have been run yet in this session."
@@ -861,6 +833,8 @@ export_html_report() {
   table.sortable thead th.sort-desc::after{content:" \25BC";color:var(--accent);}
   table.sortable tbody tr:nth-child(even){background:#fafbfd;}
   table.sortable tbody tr:hover{background:#f0f6ff;}
+  h4.table-section{margin:18px 22px 6px;font-size:.78rem;color:var(--muted);text-transform:uppercase;letter-spacing:.04em;}
+  h4.table-section:first-child{margin-top:14px;}
   .table-hint{margin:0;padding:8px 22px;font-size:.74rem;color:var(--muted);background:#fafbfd;border-top:1px solid var(--border);}
   footer{text-align:center;color:var(--muted);font-size:.78rem;padding:24px 20px;}
   footer a{color:var(--accent);text-decoration:none;}
@@ -896,11 +870,14 @@ HTML_HEAD
             local data_file="${SESSION_DATA_FILES[$i]}"
             local body_html table_html=""
 
-            # Prefer the step's own clean JSON file (if it registered one) --
+            # Prefer the step's own clean data file (if it registered one) --
             # the transcript log mixes in menu prompts and [INFO]/[OK] lines,
             # which would make the whole file fail JSON parsing.
             if [[ -n "${data_file}" && -s "${data_file}" ]]; then
                 table_html="$(try_render_json_table "${data_file}")"
+                if [[ -z "${table_html}" ]]; then
+                    table_html="$(try_render_ebpf_table "${data_file}")"
+                fi
             fi
             if [[ -z "${table_html}" && -s "${file}" ]]; then
                 table_html="$(try_render_block_table "${file}")"
