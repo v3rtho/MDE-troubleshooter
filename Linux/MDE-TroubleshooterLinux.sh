@@ -395,14 +395,29 @@ hes_set_info() {
 # Run one of the "hot-event-sources" sub-commands, then try to locate the
 # JSON report mdatp writes as a side effect and offer the same
 # pretty-print/sort/filter view used for RTP statistics.
-#   hes_collect <files|executables> <noisiest-thing-label>
+#
+# "mdatp diagnostic hot-event-sources" is a live monitor (it redraws the
+# screen every second and only stops on Ctrl-C/SIGINT) -- it never finishes
+# on its own. So this bounds it with `timeout -s INT`, which sends mdatp
+# exactly the signal a manual Ctrl-C would (letting it shut down cleanly and
+# still save its report) after a fixed number of seconds, without relying on
+# a human to interrupt it -- interrupting the whole script's process group
+# from inside a pipeline is not something we can do safely here anyway.
+# mdatp's own live redraw (full of clear-screen escape codes) is suppressed
+# entirely rather than captured, since a screen recording of a live counter
+# isn't useful in the report; only our own summary lines and the eventual
+# JSON view are shown/saved.
+#   hes_collect <files|executables> <noisiest-thing-label> <duration-seconds>
 hes_collect() {
-    local kind="$1" noisy_label="$2"
+    local kind="$1" noisy_label="$2" duration="${3:-20}"
+    [[ "${duration}" =~ ^[0-9]+$ && "${duration}" -gt 0 ]] || duration=20
     ensure_report_dir
     local marker
     marker="$(mktemp)"
-    run_maybe_sudo mdatp diagnostic hot-event-sources "${kind}"
-    log_ok "Command finished."
+
+    log_info "Monitoring for ${duration} seconds (mdatp's own live display is suppressed here)..."
+    run_maybe_sudo timeout -s INT "${duration}" mdatp diagnostic hot-event-sources "${kind}" >/dev/null 2>&1
+    log_ok "Collection window finished."
     log_info "Look at the ${noisy_label} with the highest 'count' to identify the noisiest one."
 
     local found_json
@@ -411,7 +426,7 @@ hes_collect() {
 
     if [[ -z "${found_json}" ]]; then
         log_warn "Could not automatically locate the Hot Event Sources JSON report."
-        log_warn "Check the console output above for its path, or search for it manually."
+        log_warn "It may not have had time to save -- try a longer duration, or search for it manually."
         return 0
     fi
 
@@ -429,17 +444,21 @@ hes_collect() {
 hes_collect_files() {
     require_mdatp || return 1
     require_root || return 1
-    log_info "Collecting Hot Event Sources for FILES (requires root; runs until you stop it or it completes)..."
+    local duration
+    read -rp "How many seconds to monitor? [default: 20]: " duration
+    log_info "Collecting Hot Event Sources for FILES (requires root)..."
     log_warn "Ensure log level is 'debug' first (menu option 1) for a detailed report."
-    hes_collect files "file"
+    hes_collect files "file" "${duration:-20}"
 }
 
 hes_collect_executables() {
     require_mdatp || return 1
     require_root || return 1
+    local duration
+    read -rp "How many seconds to monitor? [default: 20]: " duration
     log_info "Collecting Hot Event Sources for EXECUTABLES (requires root)..."
     log_warn "Ensure log level is 'debug' first (menu option 1) for a detailed report."
-    hes_collect executables "executable"
+    hes_collect executables "executable" "${duration:-20}"
 }
 
 menu_hot_event_sources() {
