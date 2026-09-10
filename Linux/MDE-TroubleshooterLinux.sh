@@ -101,6 +101,25 @@ run_maybe_sudo() {
     fi
 }
 
+# mdatp writes its Hot Event Sources report as a JSON file "in your local
+# folder" (per Microsoft's docs) without printing a documented, fixed path.
+# Rather than guess one location, take a timestamp just before running the
+# collection and search the handful of directories mdatp is realistically
+# using, returning the newest matching *.json file created since then.
+find_newest_json_since() {
+    local marker="$1"
+    local candidates=("$(pwd)" "${_REAL_HOME}" "/tmp" "/var/log/microsoft/mdatp" "/var/opt/microsoft/mdatp" "/opt/microsoft/mdatp")
+    local existing=() d
+    for d in "${candidates[@]}"; do
+        [[ -n "${d}" && -d "${d}" ]] && existing+=("${d}")
+    done
+    [[ "${#existing[@]}" -eq 0 ]] && return 1
+    run_maybe_sudo find "${existing[@]}" -maxdepth 2 -type f -iname '*.json' -newer "${marker}" -printf '%T@ %p\n' 2>/dev/null \
+        | sort -rn \
+        | head -n1 \
+        | cut -d' ' -f2-
+}
+
 # Escape text for safe embedding inside an HTML <pre> block
 html_escape() {
     sed -e 's/&/\&amp;/g' -e 's/</\&lt;/g' -e 's/>/\&gt;/g'
@@ -349,26 +368,53 @@ hes_set_info() {
     log_ok "Log level set back to info."
 }
 
+# Run one of the "hot-event-sources" sub-commands, then try to locate the
+# JSON report mdatp writes as a side effect and offer the same
+# pretty-print/sort/filter view used for RTP statistics.
+#   hes_collect <files|executables> <noisiest-thing-label>
+hes_collect() {
+    local kind="$1" noisy_label="$2"
+    ensure_report_dir
+    local marker
+    marker="$(mktemp)"
+    run_maybe_sudo mdatp diagnostic hot-event-sources "${kind}"
+    log_ok "Command finished."
+    log_info "Look at the ${noisy_label} with the highest 'count' to identify the noisiest one."
+
+    local found_json
+    found_json="$(find_newest_json_since "${marker}")"
+    rm -f "${marker}"
+
+    if [[ -z "${found_json}" ]]; then
+        log_warn "Could not automatically locate the Hot Event Sources JSON report."
+        log_warn "Check the console output above for its path, or search for it manually."
+        return 0
+    fi
+
+    local saved_copy="${REPORT_DIR}/hes-${kind}-report-${TIMESTAMP}.json"
+    run_maybe_sudo cp "${found_json}" "${saved_copy}" 2>/dev/null
+    chmod 644 "${saved_copy}" 2>/dev/null
+    fix_ownership "${saved_copy}"
+    log_ok "Found Hot Event Sources report: ${found_json}"
+    log_info "Saved a copy to: ${saved_copy}"
+    echo ""
+    view_json_filtered "${saved_copy}"
+}
+
 hes_collect_files() {
     require_mdatp || return 1
     require_root || return 1
-    ensure_report_dir
     log_info "Collecting Hot Event Sources for FILES (requires root; runs until you stop it or it completes)..."
     log_warn "Ensure log level is 'debug' first (menu option 1) for a detailed report."
-    run_maybe_sudo mdatp diagnostic hot-event-sources files
-    log_ok "Command finished. A hot event source JSON report should be saved in the local folder mdatp writes to."
-    log_info "Look at the file with the highest 'count' to identify the noisiest file."
+    hes_collect files "file"
 }
 
 hes_collect_executables() {
     require_mdatp || return 1
     require_root || return 1
-    ensure_report_dir
     log_info "Collecting Hot Event Sources for EXECUTABLES (requires root)..."
     log_warn "Ensure log level is 'debug' first (menu option 1) for a detailed report."
-    run_maybe_sudo mdatp diagnostic hot-event-sources executables
-    log_ok "Command finished. A hot event source JSON report should be saved in the local folder mdatp writes to."
-    log_info "Look at the executable with the highest 'count' to identify the noisiest process."
+    hes_collect executables "executable"
 }
 
 menu_hot_event_sources() {
