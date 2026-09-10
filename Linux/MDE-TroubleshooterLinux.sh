@@ -43,6 +43,7 @@ TIMESTAMP="$(date +%Y%m%d_%H%M%S)"
 SESSION_LABELS=()
 SESSION_FILES=()
 SESSION_TIMES=()
+SESSION_DATA_FILES=()   # path to a step's own clean JSON output file, or "" if it has none
 
 # ---------- Helpers ----------
 
@@ -134,6 +135,16 @@ capture_step() {
     ensure_report_dir
     local file="${REPORT_DIR}/${fname}-${TIMESTAMP}-$$-${RANDOM}.log"
 
+    # Steps that produce their own clean JSON file (RTP stats, Hot Event
+    # Sources) report its path by writing it into this marker file -- see
+    # register_step_data_file(). It has to be file-based IPC rather than a
+    # plain shell variable because "func" below is the first stage of a
+    # pipeline, i.e. it runs in a subshell; a variable it set there would
+    # vanish the moment that subshell exits, before we could read it back.
+    local data_marker
+    data_marker="$(mktemp)"
+    CAPTURE_DATA_MARKER="${data_marker}"
+
     # Run the real function; tee shows live colored output on the terminal
     # while also saving it to disk. tee is part of the pipeline so the shell
     # waits for it before continuing -- unlike `tee >(cmd)`, which can return
@@ -145,9 +156,21 @@ capture_step() {
     chmod 644 "${file}" 2>/dev/null
     fix_ownership "${file}"
 
+    local data_file=""
+    [[ -s "${data_marker}" ]] && data_file="$(cat "${data_marker}")"
+    rm -f "${data_marker}"
+
     SESSION_LABELS+=("${label}")
     SESSION_FILES+=("${file}")
     SESSION_TIMES+=("$(date '+%Y-%m-%d %H:%M:%S')")
+    SESSION_DATA_FILES+=("${data_file}")
+}
+
+# Called by a wrapped step function to tell capture_step "the clean JSON for
+# this step lives at this path" -- so the HTML export can render it as a
+# sortable table without having to parse the noisy log/menu text around it.
+register_step_data_file() {
+    [[ -n "${CAPTURE_DATA_MARKER:-}" ]] && echo "$1" > "${CAPTURE_DATA_MARKER}"
 }
 
 # ---------- Pre-flight ----------
@@ -201,6 +224,7 @@ rtp_collect_statistics() {
     chmod 644 "${out_file}" 2>/dev/null
     fix_ownership "${out_file}"
     log_ok "Saved raw JSON output to: ${out_file}"
+    register_step_data_file "${out_file}"
     echo ""
     view_json_filtered "${out_file}"
 }
@@ -397,6 +421,7 @@ hes_collect() {
     fix_ownership "${saved_copy}"
     log_ok "Found Hot Event Sources report: ${found_json}"
     log_info "Saved a copy to: ${saved_copy}"
+    register_step_data_file "${saved_copy}"
     echo ""
     view_json_filtered "${saved_copy}"
 }
@@ -849,17 +874,23 @@ HTML_HEAD
             local label="${SESSION_LABELS[$i]}"
             local file="${SESSION_FILES[$i]}"
             local when="${SESSION_TIMES[$i]}"
-            local body_html table_html
-            if [[ -s "${file}" ]]; then
-                table_html="$(try_render_json_table "${file}")"
-                if [[ -z "${table_html}" ]]; then
-                    table_html="$(try_render_block_table "${file}")"
-                fi
-                if [[ -n "${table_html}" ]]; then
-                    body_html="<div class=\"table-wrap\">${table_html}</div><p class=\"table-hint\">Click a column header to sort.</p>"
-                else
-                    body_html="<pre>$(html_escape < "${file}")</pre>"
-                fi
+            local data_file="${SESSION_DATA_FILES[$i]}"
+            local body_html table_html=""
+
+            # Prefer the step's own clean JSON file (if it registered one) --
+            # the transcript log mixes in menu prompts and [INFO]/[OK] lines,
+            # which would make the whole file fail JSON parsing.
+            if [[ -n "${data_file}" && -s "${data_file}" ]]; then
+                table_html="$(try_render_json_table "${data_file}")"
+            fi
+            if [[ -z "${table_html}" && -s "${file}" ]]; then
+                table_html="$(try_render_block_table "${file}")"
+            fi
+
+            if [[ -n "${table_html}" ]]; then
+                body_html="<div class=\"table-wrap\">${table_html}</div><p class=\"table-hint\">Click a column header to sort.</p>"
+            elif [[ -s "${file}" ]]; then
+                body_html="<pre>$(html_escape < "${file}")</pre>"
             else
                 body_html="<pre>(no output captured for this step)</pre>"
             fi
