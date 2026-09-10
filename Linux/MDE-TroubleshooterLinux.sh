@@ -607,6 +607,111 @@ run_all_collections() {
 
 # ---------- HTML Export ----------
 
+# Returns "" if the root of the JSON is itself the array of records, the
+# field name if it's the first array-valued field on a wrapping object (e.g.
+# "eventSource" for the Hot Event Sources shape), or the sentinel NONE_MARKER
+# if no array of records can be found at all.
+NONE_MARKER=$'\x01NONE\x01'
+json_records_field() {
+    local file="$1"
+    jq -r --arg none "${NONE_MARKER}" '
+        if type == "array" then ""
+        else
+            (to_entries | map(select(.value | type == "array")) | first) as $e
+            | if $e then $e.key else $none end
+        end
+    ' "${file}" 2>/dev/null
+}
+
+# If the step's captured output is JSON holding a non-empty array of record
+# objects, print a sortable HTML <table> for it and return 0. Otherwise print
+# nothing and return 1, so the caller falls back to a plain <pre> block.
+try_render_json_table() {
+    local file="$1"
+    command -v jq >/dev/null 2>&1 || return 1
+    jq empty "${file}" >/dev/null 2>&1 || return 1
+
+    local field table_html
+    field="$(json_records_field "${file}")"
+    [[ "${field}" == "${NONE_MARKER}" ]] && return 1
+
+    table_html="$(jq -r --arg field "${field}" '
+        (if $field == "" then . else .[$field] end) as $arr
+        | if ($arr | type) == "array" and ($arr | length) > 0 then
+            ($arr[0] | keys_unsorted) as $keys
+            | "<table class=\"sortable\"><thead><tr>"
+              + ($keys | map("<th>" + (@html) + "</th>") | join(""))
+              + "</tr></thead><tbody>"
+              + ($arr | map(
+                  . as $row
+                  | "<tr>" + (reduce $keys[] as $k (""; . + "<td>" + (($row[$k]? // "") | tostring | @html) + "</td>")) + "</tr>"
+                ) | join(""))
+              + "</tbody></table>"
+          else
+            ""
+          end
+    ' "${file}" 2>/dev/null)"
+
+    [[ -z "${table_html}" ]] && return 1
+    echo "${table_html}"
+    return 0
+}
+
+# Detects mdatp's repeated "===== \n Key: Value \n Key: Value ..." block
+# format (used by the RTP top-offenders text output) and renders it as a
+# sortable HTML table. Prints nothing and returns 1 if the content doesn't
+# match that shape, so the caller falls back to a plain <pre> block.
+try_render_block_table() {
+    local file="$1"
+    grep -q '^=\{5,\}[[:space:]]*$' "${file}" 2>/dev/null || return 1
+
+    awk '
+        function htmlesc(s) {
+            gsub(/&/, "\\&amp;", s)
+            gsub(/</, "\\&lt;", s)
+            gsub(/>/, "\\&gt;", s)
+            return s
+        }
+        function closeblock() {
+            if (!inblock || nkeys == 0) { return }
+            nblocks++
+            if (nblocks == 1) {
+                nheader = nkeys
+                for (k = 1; k <= nkeys; k++) { headerKeys[k] = curkeys[k] }
+            }
+            for (k = 1; k <= nheader; k++) { rows[nblocks, k] = curvals[headerKeys[k]] }
+        }
+        BEGIN { nblocks = 0; nkeys = 0; inblock = 0 }
+        /^=+[[:space:]]*$/ {
+            closeblock()
+            nkeys = 0; delete curkeys; delete curvals
+            inblock = 1
+            next
+        }
+        inblock && index($0, ": ") > 0 {
+            idx = index($0, ": ")
+            key = substr($0, 1, idx - 1)
+            val = substr($0, idx + 2)
+            nkeys++
+            curkeys[nkeys] = key
+            curvals[key] = val
+        }
+        END {
+            closeblock()
+            if (nblocks == 0) { exit 1 }
+            print "<table class=\"sortable\"><thead><tr>"
+            for (k = 1; k <= nheader; k++) { print "<th>" htmlesc(headerKeys[k]) "</th>" }
+            print "</tr></thead><tbody>"
+            for (r = 1; r <= nblocks; r++) {
+                print "<tr>"
+                for (k = 1; k <= nheader; k++) { print "<td>" htmlesc(rows[r, k]) "</td>" }
+                print "</tr>"
+            }
+            print "</tbody></table>"
+        }
+    ' "${file}"
+}
+
 export_html_report() {
     if [[ "${#SESSION_LABELS[@]}" -eq 0 ]]; then
         log_warn "No checks have been run yet in this session."
@@ -657,6 +762,16 @@ export_html_report() {
   section.card pre{margin:0;padding:18px 22px;background:#0d1117;color:#d7dce1;overflow-x:auto;font-size:.8rem;line-height:1.55;max-height:520px;white-space:pre-wrap;word-break:break-word;}
   .badge{display:inline-block;padding:2px 11px;border-radius:20px;font-size:.72rem;font-weight:600;margin-right:12px;}
   .badge.step{background:#e8f0fb;color:var(--accent);}
+  .table-wrap{overflow-x:auto;max-height:520px;}
+  table.sortable{width:100%;border-collapse:collapse;font-size:.82rem;}
+  table.sortable th,table.sortable td{padding:8px 14px;border-bottom:1px solid var(--border);text-align:left;white-space:nowrap;}
+  table.sortable thead th{position:sticky;top:0;background:#eef3fa;color:var(--ink);font-weight:600;cursor:pointer;user-select:none;}
+  table.sortable thead th:hover{background:#e2ecf9;}
+  table.sortable thead th.sort-asc::after{content:" \25B2";color:var(--accent);}
+  table.sortable thead th.sort-desc::after{content:" \25BC";color:var(--accent);}
+  table.sortable tbody tr:nth-child(even){background:#fafbfd;}
+  table.sortable tbody tr:hover{background:#f0f6ff;}
+  .table-hint{margin:0;padding:8px 22px;font-size:.74rem;color:var(--muted);background:#fafbfd;border-top:1px solid var(--border);}
   footer{text-align:center;color:var(--muted);font-size:.78rem;padding:24px 20px;}
   footer a{color:var(--accent);text-decoration:none;}
 </style>
@@ -688,11 +803,19 @@ HTML_HEAD
             local label="${SESSION_LABELS[$i]}"
             local file="${SESSION_FILES[$i]}"
             local when="${SESSION_TIMES[$i]}"
-            local content
+            local body_html table_html
             if [[ -s "${file}" ]]; then
-                content="$(html_escape < "${file}")"
+                table_html="$(try_render_json_table "${file}")"
+                if [[ -z "${table_html}" ]]; then
+                    table_html="$(try_render_block_table "${file}")"
+                fi
+                if [[ -n "${table_html}" ]]; then
+                    body_html="<div class=\"table-wrap\">${table_html}</div><p class=\"table-hint\">Click a column header to sort.</p>"
+                else
+                    body_html="<pre>$(html_escape < "${file}")</pre>"
+                fi
             else
-                content="(no output captured for this step)"
+                body_html="<pre>(no output captured for this step)</pre>"
             fi
             echo "<section class=\"card\" id=\"step-${i}\">"
             echo "  <details open>"
@@ -700,7 +823,7 @@ HTML_HEAD
             echo "      <span class=\"title-wrap\"><span class=\"badge step\">Step $((i+1))</span>${label}</span>"
             echo "      <span class=\"meta\">${when}</span>"
             echo "    </summary>"
-            echo "    <pre>${content}</pre>"
+            echo "    ${body_html}"
             echo "  </details>"
             echo "</section>"
         done
@@ -708,6 +831,43 @@ HTML_HEAD
         echo "</main>"
         echo "<footer>Generated by mdatp-perf-troubleshoot.sh &middot; Source: "
         echo "<a href=\"https://learn.microsoft.com/en-us/defender-endpoint/linux-support-perf\" target=\"_blank\">learn.microsoft.com/en-us/defender-endpoint/linux-support-perf</a></footer>"
+
+        cat <<'HTML_SCRIPT'
+<script>
+document.addEventListener('click', function (e) {
+  var th = e.target.closest('table.sortable th');
+  if (!th) { return; }
+  var table = th.closest('table');
+  var headerRow = table.tHead.rows[0];
+  var ths = Array.prototype.slice.call(headerRow.cells);
+  var colIndex = ths.indexOf(th);
+  var newDir = th.classList.contains('sort-asc') ? 'desc' : 'asc';
+  ths.forEach(function (t) { t.classList.remove('sort-asc', 'sort-desc'); });
+  th.classList.add(newDir === 'asc' ? 'sort-asc' : 'sort-desc');
+
+  var tbody = table.tBodies[0];
+  var rows = Array.prototype.slice.call(tbody.rows);
+  function cellText(row) {
+    return (row.cells[colIndex] ? row.cells[colIndex].textContent : '').trim();
+  }
+  var allNumeric = rows.every(function (r) {
+    var v = cellText(r).replace(/["',]/g, '');
+    return v === '' || !isNaN(parseFloat(v));
+  });
+  rows.sort(function (a, b) {
+    var av = cellText(a), bv = cellText(b), cmp;
+    if (allNumeric) {
+      cmp = (parseFloat(av.replace(/["',]/g, '')) || 0) - (parseFloat(bv.replace(/["',]/g, '')) || 0);
+    } else {
+      cmp = av.localeCompare(bv, undefined, { numeric: true, sensitivity: 'base' });
+    }
+    return newDir === 'asc' ? cmp : -cmp;
+  });
+  rows.forEach(function (r) { tbody.appendChild(r); });
+});
+</script>
+HTML_SCRIPT
+
         echo "</body></html>"
     } > "${html_file}"
 
