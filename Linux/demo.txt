@@ -1,0 +1,3 @@
+PGPASSWORD='test123' psql -U loadtest -h localhost loadtest -c "
+CREATE TABLE bigdata AS
+SELECT generate_series(1,10000000) AS id, md5(random()::text) AS val;"
