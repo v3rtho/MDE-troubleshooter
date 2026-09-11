@@ -1,5 +1,5 @@
 # Author: Thomas Verheyden
-# New release: 28.08.2025
+# New release: 12.06.2025
 # Version: 3.1.0
 # Blogpost: https://vertho.tech/2023/06/30/tool-mde-troubleshooter-is-born/
 # Website: vertho.tech
@@ -402,22 +402,26 @@ It offers a centralized view of the security configuration, log files, updates, 
                         
                         <Border Grid.Column="0" Grid.Row="0" Style="{StaticResource SectionBorder}">
                             <StackPanel>
-                                <Label Content="Current Signature Information" FontSize="14" FontWeight="Bold" Foreground="#E8E8E8" Margin="0,0,0,10"/>
+                                <Label Content="Update Information" FontSize="14" FontWeight="Bold" Foreground="#E8E8E8" Margin="0,0,0,10"/>
                                 <Grid>
                                     <Grid.ColumnDefinitions><ColumnDefinition Width="170"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
-                                    <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/></Grid.RowDefinitions>
-                                    <Label Grid.Row="0" Grid.Column="0" Content="AV Signature Version:" Style="{StaticResource HeaderLabel}"/>
-                                    <Label Grid.Row="0" Grid.Column="1" Name="lblAntivirusSigVersion_txt" Content="N/A" Style="{StaticResource ValueLabel}"/>
-                                    <Label Grid.Row="1" Grid.Column="0" Content="AV Signature Age:" Style="{StaticResource HeaderLabel}"/>
-                                    <Label Grid.Row="1" Grid.Column="1" Name="lblAntivirusSigAge_txt" Content="N/A" Style="{StaticResource ValueLabel}"/>
-                                    <Label Grid.Row="2" Grid.Column="0" Content="AV Sig Last Updated:" Style="{StaticResource HeaderLabel}"/>
-                                    <Label Grid.Row="2" Grid.Column="1" Name="lblAntivirusSigLastUpdated_txt" Content="N/A" Style="{StaticResource ValueLabel}"/>
-                                    <Label Grid.Row="3" Grid.Column="0" Content="AS Signature Version:" Style="{StaticResource HeaderLabel}"/>
-                                    <Label Grid.Row="3" Grid.Column="1" Name="lblAntispywareSigVersion_txt" Content="N/A" Style="{StaticResource ValueLabel}"/>
-                                    <Label Grid.Row="4" Grid.Column="0" Content="AS Signature Age:" Style="{StaticResource HeaderLabel}"/>
-                                    <Label Grid.Row="4" Grid.Column="1" Name="lblAntispywareSigAge_txt" Content="N/A" Style="{StaticResource ValueLabel}"/>
-                                    <Label Grid.Row="5" Grid.Column="0" Content="NIS Signature Version:" Style="{StaticResource HeaderLabel}"/>
-                                    <Label Grid.Row="5" Grid.Column="1" Name="lblSignatureVersion_txt" Content="N/A" Style="{StaticResource ValueLabel}"/>
+                                    <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/></Grid.RowDefinitions>
+                                    <Label Grid.Row="0" Grid.Column="0" Content="Engine Version:" Style="{StaticResource HeaderLabel}"/>
+                                    <Label Grid.Row="0" Grid.Column="1" Name="lblCurrentEngineVersion_txt" Content="N/A" Style="{StaticResource ValueLabel}"/>
+                                    <Label Grid.Row="1" Grid.Column="0" Content="Platform Version:" Style="{StaticResource HeaderLabel}"/>
+                                    <Label Grid.Row="1" Grid.Column="1" Name="lblCurrentPlatformVersion_txt" Content="N/A" Style="{StaticResource ValueLabel}"/>
+                                    <Label Grid.Row="2" Grid.Column="0" Content="AV Signature Version:" Style="{StaticResource HeaderLabel}"/>
+                                    <Label Grid.Row="2" Grid.Column="1" Name="lblAntivirusSigVersion_txt" Content="N/A" Style="{StaticResource ValueLabel}"/>
+                                    <Label Grid.Row="3" Grid.Column="0" Content="AV Signature Age:" Style="{StaticResource HeaderLabel}"/>
+                                    <Label Grid.Row="3" Grid.Column="1" Name="lblAntivirusSigAge_txt" Content="N/A" Style="{StaticResource ValueLabel}"/>
+                                    <Label Grid.Row="4" Grid.Column="0" Content="AV Sig Last Updated:" Style="{StaticResource HeaderLabel}"/>
+                                    <Label Grid.Row="4" Grid.Column="1" Name="lblAntivirusSigLastUpdated_txt" Content="N/A" Style="{StaticResource ValueLabel}"/>
+                                    <Label Grid.Row="5" Grid.Column="0" Content="AS Signature Version:" Style="{StaticResource HeaderLabel}"/>
+                                    <Label Grid.Row="5" Grid.Column="1" Name="lblAntispywareSigVersion_txt" Content="N/A" Style="{StaticResource ValueLabel}"/>
+                                    <Label Grid.Row="6" Grid.Column="0" Content="AS Signature Age:" Style="{StaticResource HeaderLabel}"/>
+                                    <Label Grid.Row="6" Grid.Column="1" Name="lblAntispywareSigAge_txt" Content="N/A" Style="{StaticResource ValueLabel}"/>
+                                    <Label Grid.Row="7" Grid.Column="0" Content="NIS Signature Version:" Style="{StaticResource HeaderLabel}"/>
+                                    <Label Grid.Row="7" Grid.Column="1" Name="lblSignatureVersion_txt" Content="N/A" Style="{StaticResource ValueLabel}"/>
                                 </Grid>
                             </StackPanel>
                         </Border>
@@ -1314,6 +1318,8 @@ Function WindowLoader {
         $lblTSQuotaResetTime.Content  = if ($MPComputerstatus.PSObject.Properties['TroubleShootingQuotaResetTime'])    { $MPComputerstatus.TroubleShootingQuotaResetTime }    else { "N/A" }
 
         # Signature Information
+        $lblCurrentEngineVersion_txt.Content = $MPComputerstatus.AMEngineVersion
+        $lblCurrentPlatformVersion_txt.Content = $MPComputerstatus.AMProductVersion
         $lblAntivirusSigVersion_txt.Content = $MPComputerstatus.AntivirusSignatureVersion
         $lblAntivirusSigAge_txt.Content = "$($MPComputerstatus.AntivirusSignatureAge) days"
         $lblAntivirusSigLastUpdated_txt.Content = $MPComputerstatus.AntivirusSignatureLastUpdated
@@ -1554,7 +1560,7 @@ Function PerformanceReport {
             if ($rdbTopScansPerExtension.IsChecked){ $mpParams['TopScansPerExtension']= 10 }
             if ($rdbTopProcess.IsChecked)          { $mpParams['TopProcesses']        = 10 }
             if ($rdbTopScansPerProcess.IsChecked)  { $mpParams['TopScansPerProcess']  = 10 }
-            if ($rdbTopScans.IsChecked)            { $mpParams['TopScans']            = 10 }
+            if ($rdbTopScans.IsChecked)            { $mpParams['TopScans']            = 25 }
             $PerformanceReport = Get-MpPerformanceReport @mpParams
 
             if ($PerformanceReport) {
@@ -1578,7 +1584,7 @@ Function PerformanceReport {
                     @{ Control = $rdbTopPaths;      Property = "TopPaths";      Param = "-TopPaths 10";      Extras = @(@{Ctrl=$rdbTopFilesPerPath; Param="-TopFilesPerPath 10"}) }
                     @{ Control = $rdbTopExtensions; Property = "TopExtensions"; Param = "-TopExtensions 10"; Extras = @(@{Ctrl=$rdbTopScansPerExtension; Param="-TopScansPerExtension 10"}) }
                     @{ Control = $rdbTopProcess;    Property = "TopProcesses";  Param = "-TopProcesses 10";  Extras = @(@{Ctrl=$rdbTopScansPerProcess; Param="-TopScansPerProcess 10"}) }
-                    @{ Control = $rdbTopScans;      Property = "TopScans";      Param = "-TopScans 10";      Extras = @() }
+                    @{ Control = $rdbTopScans;      Property = "TopScans";      Param = "-TopScans 25";      Extras = @() }
                 )
                 foreach ($opt in $mainReports) {
                     if ($opt.Control.IsChecked -eq $true) {
@@ -2918,7 +2924,7 @@ $btnShowPerformanceReport.Add_Click({
             if ($rdbTopScansPerExtension.IsChecked){ $mpParams['TopScansPerExtension']= 10 }
             if ($rdbTopProcess.IsChecked)          { $mpParams['TopProcesses']        = 10 }
             if ($rdbTopScansPerProcess.IsChecked)  { $mpParams['TopScansPerProcess']  = 10 }
-            if ($rdbTopScans.IsChecked)            { $mpParams['TopScans']            = 10 }
+            if ($rdbTopScans.IsChecked)            { $mpParams['TopScans']            = 25 }
             $PerformanceReport = Get-MpPerformanceReport @mpParams
 
             if ($PerformanceReport) {
@@ -2942,7 +2948,7 @@ $btnShowPerformanceReport.Add_Click({
                     @{ Control = $rdbTopPaths;      Property = "TopPaths";      Param = "-TopPaths 10";      Extras = @(@{Ctrl=$rdbTopFilesPerPath; Param="-TopFilesPerPath 10"}) }
                     @{ Control = $rdbTopExtensions; Property = "TopExtensions"; Param = "-TopExtensions 10"; Extras = @(@{Ctrl=$rdbTopScansPerExtension; Param="-TopScansPerExtension 10"}) }
                     @{ Control = $rdbTopProcess;    Property = "TopProcesses";  Param = "-TopProcesses 10";  Extras = @(@{Ctrl=$rdbTopScansPerProcess; Param="-TopScansPerProcess 10"}) }
-                    @{ Control = $rdbTopScans;      Property = "TopScans";      Param = "-TopScans 10";      Extras = @() }
+                    @{ Control = $rdbTopScans;      Property = "TopScans";      Param = "-TopScans 25";      Extras = @() }
                 )
                 foreach ($opt in $mainReports) {
                     if ($opt.Control.IsChecked -eq $true) {
@@ -3152,7 +3158,7 @@ $btnExportReportHtml.Add_Click({
         if ($rdbTopScansPerExtension.IsChecked){ $mpParams['TopScansPerExtension']= 10 }
         if ($rdbTopProcess.IsChecked)          { $mpParams['TopProcesses']        = 10 }
         if ($rdbTopScansPerProcess.IsChecked)  { $mpParams['TopScansPerProcess']  = 10 }
-        if ($rdbTopScans.IsChecked)            { $mpParams['TopScans']            = 10 }
+        if ($rdbTopScans.IsChecked)            { $mpParams['TopScans']            = 25 }
 
         $PerformanceReport = Get-MpPerformanceReport @mpParams
         if (-not $PerformanceReport) {
@@ -3279,7 +3285,7 @@ $btnExportReportHtml.Add_Click({
             @{ C = $rdbTopPaths;      P = 'TopPaths';      T = 'Top Paths (Top 10)' }
             @{ C = $rdbTopExtensions; P = 'TopExtensions'; T = 'Top Extensions (Top 10)' }
             @{ C = $rdbTopProcess;    P = 'TopProcesses';  T = 'Top Processes (Top 10)' }
-            @{ C = $rdbTopScans; P = 'TopScans'; T = 'Top Scans (Top 10)'; Col3 = @('ScanType','Reason','SkipReason') }
+            @{ C = $rdbTopScans; P = 'TopScans'; T = 'Top Scans (Top 25)'; Col3 = @('ScanType','Reason','SkipReason') }
         )
         foreach ($opt in $tableOpts) {
             if ($opt.C.IsChecked -ne $true) { continue }
