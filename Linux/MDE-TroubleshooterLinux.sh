@@ -616,6 +616,21 @@ run_all_collections() {
 
 # ---------- HTML Export ----------
 
+# Step labels left out of the HTML export on purpose -- they still run and
+# show their output in the terminal as normal, they're just not written
+# into the report (the raw RTP collection is superseded there by "RTP: Top
+# Offending Processes", and the log-level check is a one-line status read
+# not worth its own report card).
+EXCLUDED_REPORT_LABELS=("RTP: Collect Statistics" "Hot Event Sources: Check Log Level")
+
+is_excluded_from_report() {
+    local label="$1" excluded
+    for excluded in "${EXCLUDED_REPORT_LABELS[@]}"; do
+        [[ "${label}" == "${excluded}" ]] && return 0
+    done
+    return 1
+}
+
 # Returns "" if the root of the JSON is itself the array of records, the
 # field name if it's the first array-valued field on a wrapping object (e.g.
 # "eventSource" for the Hot Event Sources shape), or the sentinel NONE_MARKER
@@ -850,21 +865,29 @@ HTML_HEAD
         echo "</header>"
         echo "<main>"
 
+        local i included_count=0
+        for i in "${!SESSION_LABELS[@]}"; do
+            is_excluded_from_report "${SESSION_LABELS[$i]}" || included_count=$((included_count + 1))
+        done
+
         echo "<div class=\"summary-grid\">"
-        echo "  <div class=\"stat\"><div class=\"num\">${#SESSION_LABELS[@]}</div><div class=\"label\">Checks run</div></div>"
+        echo "  <div class=\"stat\"><div class=\"num\">${included_count}</div><div class=\"label\">Checks run</div></div>"
         echo "  <div class=\"stat\"><div class=\"num\">$(hostname)</div><div class=\"label\">Host</div></div>"
         echo "  <div class=\"stat\"><div class=\"num\">$(date '+%H:%M:%S')</div><div class=\"label\">Report time</div></div>"
         echo "</div>"
 
         echo "<nav class=\"toc\"><h2>Checks included in this report</h2><ol>"
-        local i
         for i in "${!SESSION_LABELS[@]}"; do
+            is_excluded_from_report "${SESSION_LABELS[$i]}" && continue
             echo "  <li><a href=\"#step-${i}\">${SESSION_LABELS[$i]}</a></li>"
         done
         echo "</ol></nav>"
 
+        local display_step=0
         for i in "${!SESSION_LABELS[@]}"; do
             local label="${SESSION_LABELS[$i]}"
+            is_excluded_from_report "${label}" && continue
+            display_step=$((display_step + 1))
             local file="${SESSION_FILES[$i]}"
             local when="${SESSION_TIMES[$i]}"
             local data_file="${SESSION_DATA_FILES[$i]}"
@@ -893,7 +916,7 @@ HTML_HEAD
             echo "<section class=\"card\" id=\"step-${i}\">"
             echo "  <details open>"
             echo "    <summary>"
-            echo "      <span class=\"title-wrap\"><span class=\"badge step\">Step $((i+1))</span>${label}</span>"
+            echo "      <span class=\"title-wrap\"><span class=\"badge step\">Step ${display_step}</span>${label}</span>"
             echo "      <span class=\"meta\">${when}</span>"
             echo "    </summary>"
             echo "    ${body_html}"
