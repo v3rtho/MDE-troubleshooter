@@ -46,7 +46,7 @@ It offers a centralized view of the security configuration, log files, updates, 
             </Setter>
         </Style>
         <Style x:Key="MenuButtonActive" TargetType="Button" BasedOn="{StaticResource MenuButton}">
-            <Setter Property="Background" Value="#D8D8D8"/>
+            <Setter Property="Background" Value="#0078D4"/>
             <Setter Property="Foreground" Value="White"/>
             <Setter Property="FontWeight" Value="SemiBold"/>
         </Style>
@@ -169,7 +169,7 @@ It offers a centralized view of the security configuration, log files, updates, 
                         <!-- Version Information -->
                         <Border Grid.Column="0" Grid.Row="0" Style="{StaticResource SectionBorder}">
                             <StackPanel>
-                                <Label Content="Version Information" FontSize="14" FontWeight="Bold" Foreground="#E8E8E8" Margin="0,0,0,10"/>
+                                <Label Content="Version Information" FontSize="14" FontWeight="Bold" Foreground="#1A1A1A" Margin="0,0,0,10"/>
                                 <Grid>
                                     <Grid.ColumnDefinitions><ColumnDefinition Width="160"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
                                     <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/></Grid.RowDefinitions>
@@ -192,7 +192,7 @@ It offers a centralized view of the security configuration, log files, updates, 
                         <!-- Service Status -->
                         <Border Grid.Column="1" Grid.Row="0" Style="{StaticResource SectionBorder}">
                             <StackPanel>
-                                <Label Content="Service Status" FontSize="14" FontWeight="Bold" Foreground="#E8E8E8" Margin="0,0,0,10"/>
+                                <Label Content="Service Status" FontSize="14" FontWeight="Bold" Foreground="#1A1A1A" Margin="0,0,0,10"/>
                                 <Grid>
                                     <Grid.ColumnDefinitions><ColumnDefinition Width="170"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
                                     <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/></Grid.RowDefinitions>
@@ -215,7 +215,7 @@ It offers a centralized view of the security configuration, log files, updates, 
                         <!-- Real-Time Protection -->
                         <Border Grid.Column="0" Grid.Row="1" Style="{StaticResource SectionBorder}">
                             <StackPanel>
-                                <Label Content="Real-Time Protection" FontSize="14" FontWeight="Bold" Foreground="#E8E8E8" Margin="0,0,0,10"/>
+                                <Label Content="Real-Time Protection" FontSize="14" FontWeight="Bold" Foreground="#1A1A1A" Margin="0,0,0,10"/>
                                 <Grid>
                                     <Grid.ColumnDefinitions><ColumnDefinition Width="180"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
                                     <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/></Grid.RowDefinitions>
@@ -238,7 +238,7 @@ It offers a centralized view of the security configuration, log files, updates, 
                         <!-- Scan Information -->
                         <Border Grid.Column="1" Grid.Row="1" Style="{StaticResource SectionBorder}">
                             <StackPanel>
-                                <Label Content="Scan Information" FontSize="14" FontWeight="Bold" Foreground="#E8E8E8" Margin="0,0,0,10"/>
+                                <Label Content="Scan Information" FontSize="14" FontWeight="Bold" Foreground="#1A1A1A" Margin="0,0,0,10"/>
                                 <Grid>
                                     <Grid.ColumnDefinitions><ColumnDefinition Width="160"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
                                     <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/></Grid.RowDefinitions>
@@ -261,7 +261,7 @@ It offers a centralized view of the security configuration, log files, updates, 
                         <!-- Protection Settings -->
                         <Border Grid.Column="0" Grid.Row="2" Style="{StaticResource SectionBorder}">
                             <StackPanel>
-                                <Label Content="Protection Settings" FontSize="14" FontWeight="Bold" Foreground="#E8E8E8" Margin="0,0,0,10"/>
+                                <Label Content="Protection Settings" FontSize="14" FontWeight="Bold" Foreground="#1A1A1A" Margin="0,0,0,10"/>
                                 <Grid>
                                     <Grid.ColumnDefinitions><ColumnDefinition Width="170"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
                                     <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/></Grid.RowDefinitions>
@@ -284,7 +284,7 @@ It offers a centralized view of the security configuration, log files, updates, 
                         <!-- Additional Info -->
                         <Border Grid.Column="1" Grid.Row="2" Style="{StaticResource SectionBorder}">
                             <StackPanel>
-                                <Label Content="Additional Information" FontSize="14" FontWeight="Bold" Foreground="#E8E8E8" Margin="0,0,0,10"/>
+                                <Label Content="Additional Information" FontSize="14" FontWeight="Bold" Foreground="#1A1A1A" Margin="0,0,0,10"/>
                                 <Grid>
                                     <Grid.ColumnDefinitions><ColumnDefinition Width="160"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
                                     <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/></Grid.RowDefinitions>
@@ -311,7 +311,7 @@ It offers a centralized view of the security configuration, log files, updates, 
 
                     <Border Grid.Row="0" Style="{StaticResource SectionBorder}">
                         <StackPanel>
-                            <Label Content="Attack Surface Reduction Rules" FontSize="14" FontWeight="Bold" Foreground="#E8E8E8" Margin="0,0,0,10"/>
+                            <Label Content="Attack Surface Reduction Rules" FontSize="14" FontWeight="Bold" Foreground="#1A1A1A" Margin="0,0,0,10"/>
                             <TextBlock Text="Attack Surface Reduction (ASR) rules help prevent actions that malware often abuses to compromise devices and networks. View the current ASR rule configuration on this system." TextWrapping="Wrap" Margin="0,0,0,15" FontFamily="Segoe UI" Foreground="#666"/>
                             <WrapPanel>
                                 <Button Name="btnShowASR" Content="Show ASR Rules" Style="{StaticResource ActionButton}" Width="180"/>
@@ -322,7 +322,7 @@ It offers a centralized view of the security configuration, log files, updates, 
 
                     <Border Grid.Row="1" Style="{StaticResource SectionBorder}" Margin="0,10,0,0">
                         <StackPanel>
-                            <Label Content="ASR Per-Rule Exclusions" FontSize="14" FontWeight="Bold" Foreground="#E8E8E8" Margin="0,0,0,10"/>
+                            <Label Content="ASR Per-Rule Exclusions" FontSize="14" FontWeight="Bold" Foreground="#1A1A1A" Margin="0,0,0,10"/>
                             <TextBlock Text="View per-rule ASR exclusions configured via Group Policy or Intune. These exclusions are applied to specific ASR rules and are stored in the registry." TextWrapping="Wrap" Margin="0,0,0,15" FontFamily="Segoe UI" Foreground="#666"/>
                             <WrapPanel>
                                 <Button Name="btnShowASRExclusions" Content="Show Per-Rule Exclusions" Style="{StaticResource ActionButton}" Width="220"/>
@@ -333,7 +333,7 @@ It offers a centralized view of the security configuration, log files, updates, 
 
                     <Border Grid.Row="2" Style="{StaticResource SectionBorder}" Margin="0,10,0,0">
                         <StackPanel>
-                            <Label Content="Exploit Protection" FontSize="14" FontWeight="Bold" Foreground="#E8E8E8" Margin="0,0,0,10"/>
+                            <Label Content="Exploit Protection" FontSize="14" FontWeight="Bold" Foreground="#1A1A1A" Margin="0,0,0,10"/>
                             <TextBlock Text="Exploit Protection applies mitigation techniques to apps to prevent exploitation. View the current exploit protection configuration XML file." TextWrapping="Wrap" Margin="0,0,0,15" FontFamily="Segoe UI" Foreground="#666"/>
                             <WrapPanel>
                                 <Button Name="btnOpenExploitProtectionXML" Content="Open Exploit Protection XML" Style="{StaticResource ActionButton}" Width="220"/>
@@ -352,11 +352,11 @@ It offers a centralized view of the security configuration, log files, updates, 
 
                     <Border Grid.Row="0" Style="{StaticResource SectionBorder}">
                         <StackPanel>
-                            <Label Content="Defender AV Exclusions" FontSize="14" FontWeight="Bold" Foreground="#E8E8E8" Margin="0,0,0,10"/>
+                            <Label Content="Defender AV Exclusions" FontSize="14" FontWeight="Bold" Foreground="#1A1A1A" Margin="0,0,0,10"/>
                             <TextBlock Text="Exclusions allow you to exclude specific files, folders, processes, or file extensions from Microsoft Defender Antivirus scanning. View the current exclusion configuration on this system." TextWrapping="Wrap" Margin="0,0,0,15" FontFamily="Segoe UI" Foreground="#666"/>
                             <WrapPanel>
                                 <Button Name="btnExclusions"       Content="Show Exclusions"   Style="{StaticResource ActionButton}" Width="180"/>
-                                <Button Name="btnRemoveExclusions" Content="Remove Exclusions" Style="{StaticResource ActionButton}" Width="180" Margin="10,0,0,0" Background="#7A2020" BorderBrush="#A03030"/>
+                                <Button Name="btnRemoveExclusions" Content="Remove Exclusions" Style="{StaticResource ActionButton}" Width="180" Margin="10,0,0,0" Background="#7A2020" BorderBrush="#A03030" Foreground="White"/>
                             </WrapPanel>
                             <TextBlock Text="Note: Exclusions can be configured via Group Policy, Intune, or PowerShell. Use exclusions carefully as they can reduce protection." TextWrapping="Wrap" Margin="0,15,0,0" FontFamily="Segoe UI" Foreground="#888" FontStyle="Italic"/>
                         </StackPanel>
@@ -364,7 +364,7 @@ It offers a centralized view of the security configuration, log files, updates, 
 
                     <Border Grid.Row="1" Style="{StaticResource SectionBorder}" Margin="0,10,0,0">
                         <StackPanel>
-                            <Label Content="Registry Key Information" FontSize="14" FontWeight="Bold" Foreground="#E8E8E8" Margin="0,0,0,10"/>
+                            <Label Content="Registry Key Information" FontSize="14" FontWeight="Bold" Foreground="#1A1A1A" Margin="0,0,0,10"/>
                             <Grid>
                                 <Grid.ColumnDefinitions>
                                     <ColumnDefinition Width="300"/>
@@ -402,7 +402,7 @@ It offers a centralized view of the security configuration, log files, updates, 
                         
                         <Border Grid.Column="0" Grid.Row="0" Style="{StaticResource SectionBorder}">
                             <StackPanel>
-                                <Label Content="Update Information" FontSize="14" FontWeight="Bold" Foreground="#E8E8E8" Margin="0,0,0,10"/>
+                                <Label Content="Update Information" FontSize="14" FontWeight="Bold" Foreground="#1A1A1A" Margin="0,0,0,10"/>
                                 <Grid>
                                     <Grid.ColumnDefinitions><ColumnDefinition Width="170"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
                                     <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/></Grid.RowDefinitions>
@@ -428,7 +428,7 @@ It offers a centralized view of the security configuration, log files, updates, 
                         
                         <Border Grid.Column="1" Grid.Row="0" Style="{StaticResource SectionBorder}">
                             <StackPanel>
-                                <Label Content="Latest Microsoft Versions" FontSize="14" FontWeight="Bold" Foreground="#E8E8E8" Margin="0,0,0,10"/>
+                                <Label Content="Latest Microsoft Versions" FontSize="14" FontWeight="Bold" Foreground="#1A1A1A" Margin="0,0,0,10"/>
                                 <Grid>
                                     <Grid.ColumnDefinitions><ColumnDefinition Width="160"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
                                     <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/></Grid.RowDefinitions>
@@ -444,7 +444,7 @@ It offers a centralized view of the security configuration, log files, updates, 
                         
                         <Border Grid.Column="0" Grid.ColumnSpan="2" Grid.Row="1" Style="{StaticResource SectionBorder}">
                             <StackPanel>
-                                <Label Content="Update Actions" FontSize="14" FontWeight="Bold" Foreground="#E8E8E8" Margin="0,0,0,10"/>
+                                <Label Content="Update Actions" FontSize="14" FontWeight="Bold" Foreground="#1A1A1A" Margin="0,0,0,10"/>
                                 <WrapPanel>
                                     <Button Name="btnCheckForLastestUpdate" Content="Check for Latest Updates" Style="{StaticResource ActionButton}" Width="220"/>
                                     <Button Name="btnUpdateIntel" Content="Update Intel Signatures" Style="{StaticResource ActionButton}" Width="220"/>
@@ -458,14 +458,14 @@ It offers a centralized view of the security configuration, log files, updates, 
                 <Grid Name="panelLogs" Margin="10" Visibility="Collapsed">
                     <Border Style="{StaticResource SectionBorder}">
                         <StackPanel>
-                            <Label Content="Event Log Viewers" FontSize="14" FontWeight="Bold" Foreground="#E8E8E8" Margin="0,0,0,10"/>
+                            <Label Content="Event Log Viewers" FontSize="14" FontWeight="Bold" Foreground="#1A1A1A" Margin="0,0,0,10"/>
                             <TextBlock Text="View Windows event logs related to Microsoft Defender for Endpoint." TextWrapping="Wrap" Margin="0,0,0,15" FontFamily="Segoe UI" Foreground="#666"/>
                             <WrapPanel>
                                 <Button Name="btnShowSenseLogs" Content="Show SENSE Logs" Style="{StaticResource ActionButton}" Width="200"/>
                                 <Button Name="btnShowDefenderAVLogs" Content="Show Defender AV Logs" Style="{StaticResource ActionButton}" Width="200"/>
                             </WrapPanel>
                             <TextBlock Text="Note: SENSE logs show EDR sensor activity. Defender AV logs show antivirus events." TextWrapping="Wrap" Margin="0,15,0,0" FontFamily="Segoe UI" Foreground="#888" FontStyle="Italic"/>
-                            <Label Content="Security Event Exports" FontSize="14" FontWeight="Bold" Foreground="#E8E8E8" Margin="0,20,0,10"/>
+                            <Label Content="Security Event Exports" FontSize="14" FontWeight="Bold" Foreground="#1A1A1A" Margin="0,20,0,10"/>
                             <TextBlock Text="Export filtered Event Viewer logs for ASR and Exploit Guard events." TextWrapping="Wrap" Margin="0,0,0,15" FontFamily="Segoe UI" Foreground="#666"/>
                             <WrapPanel>
                                 <Button Name="btnExportASRBlockEvents" Content="ASR Block Events" Style="{StaticResource ActionButton}" Width="180"/>
@@ -483,7 +483,7 @@ It offers a centralized view of the security configuration, log files, updates, 
                         <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/></Grid.RowDefinitions>
                         <Border Grid.Row="0" Style="{StaticResource SectionBorder}">
                             <StackPanel>
-                                <Label Content="Performance Recording" FontSize="14" FontWeight="Bold" Foreground="#E8E8E8" Margin="0,0,0,10"/>
+                                <Label Content="Performance Recording" FontSize="14" FontWeight="Bold" Foreground="#1A1A1A" Margin="0,0,0,10"/>
                                 <TextBlock Text="Start a performance recording to capture Defender scan activity." TextWrapping="Wrap" Margin="0,0,0,15" FontFamily="Segoe UI" Foreground="#666"/>
                                 <WrapPanel>
                                     <Button Name="btnRunPerformance" Content="Run Performance Analyzer" Style="{StaticResource ActionButton}" Width="220"/>
@@ -492,7 +492,7 @@ It offers a centralized view of the security configuration, log files, updates, 
                         </Border>
                         <Border Grid.Row="1" Style="{StaticResource SectionBorder}">
                             <StackPanel>
-                                <Label Content="Report Options" FontSize="14" FontWeight="Bold" Foreground="#E8E8E8" Margin="0,0,0,10"/>
+                                <Label Content="Report Options" FontSize="14" FontWeight="Bold" Foreground="#1A1A1A" Margin="0,0,0,10"/>
                                 <WrapPanel>
                                     <TextBlock Text="Report Windows:" FontWeight="SemiBold" FontFamily="Segoe UI" FontSize="12" Foreground="#555" Width="800" Margin="10,2,0,2"/>
                                     <CheckBox Name="rdbOverview"       Content="-Overview"       Margin="10,3" IsChecked="True" FontFamily="Consolas" FontSize="12"/>
@@ -516,7 +516,7 @@ It offers a centralized view of the security configuration, log files, updates, 
                         </Border>
                         <Border Grid.Row="2" Style="{StaticResource SectionBorder}">
                             <StackPanel>
-                                <Label Content="Estimated Impact (MPlog)" FontSize="14" FontWeight="Bold" Foreground="#E8E8E8" Margin="0,0,0,10"/>
+                                <Label Content="Estimated Impact (MPlog)" FontSize="14" FontWeight="Bold" Foreground="#1A1A1A" Margin="0,0,0,10"/>
                                 <TextBlock Text="View estimated impact entries from the Microsoft Defender MPlog file." TextWrapping="Wrap" Margin="0,0,0,15" FontFamily="Segoe UI" Foreground="#666"/>
                                 <WrapPanel>
                                     <Button Name="btnShowEstimatedImpact" Content="Show Estimated Impact (MPlog)" Style="{StaticResource ActionButton}" Width="240"/>
@@ -525,7 +525,7 @@ It offers a centralized view of the security configuration, log files, updates, 
                         </Border>
                         <Border Grid.Row="3" Style="{StaticResource SectionBorder}">
                             <StackPanel>
-                                <Label Content="Client Analyzer" FontSize="14" FontWeight="Bold" Foreground="#E8E8E8" Margin="0,0,0,10"/>
+                                <Label Content="Client Analyzer" FontSize="14" FontWeight="Bold" Foreground="#1A1A1A" Margin="0,0,0,10"/>
                                 <TextBlock Text="Download the official Microsoft Defender Client Analyzer tool." TextWrapping="Wrap" Margin="0,0,0,15" FontFamily="Segoe UI" Foreground="#666"/>
                                 <Button Name="btnDownloadClientAnalyzer" Content="Download Client Analyzer" Style="{StaticResource ActionButton}" Width="220" HorizontalAlignment="Left"/>
                             </StackPanel>
@@ -537,7 +537,7 @@ It offers a centralized view of the security configuration, log files, updates, 
                 <Grid Name="panelProxy" Margin="10" Visibility="Collapsed">
                     <Border Style="{StaticResource SectionBorder}">
                         <StackPanel>
-                            <Label Content="Proxy Configuration" FontSize="14" FontWeight="Bold" Foreground="#E8E8E8" Margin="0,0,0,10"/>
+                            <Label Content="Proxy Configuration" FontSize="14" FontWeight="Bold" Foreground="#1A1A1A" Margin="0,0,0,10"/>
                             <TextBlock Text="Current proxy settings configured for Microsoft Defender:" TextWrapping="Wrap" Margin="0,0,0,15" FontFamily="Segoe UI" Foreground="#666"/>
                             <Grid>
                                 <Grid.ColumnDefinitions><ColumnDefinition Width="120"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
@@ -560,7 +560,7 @@ It offers a centralized view of the security configuration, log files, updates, 
                         
                         <Border Grid.Column="0" Grid.Row="0" Style="{StaticResource SectionBorder}">
                             <StackPanel>
-                                <Label Content="Domain Profile" FontSize="14" FontWeight="Bold" Foreground="#E8E8E8" Margin="0,0,0,10"/>
+                                <Label Content="Domain Profile" FontSize="14" FontWeight="Bold" Foreground="#1A1A1A" Margin="0,0,0,10"/>
                                 <Grid>
                                     <Grid.ColumnDefinitions><ColumnDefinition Width="160"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
                                     <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/></Grid.RowDefinitions>
@@ -578,7 +578,7 @@ It offers a centralized view of the security configuration, log files, updates, 
                         
                         <Border Grid.Column="1" Grid.Row="0" Style="{StaticResource SectionBorder}">
                             <StackPanel>
-                                <Label Content="Private Profile" FontSize="14" FontWeight="Bold" Foreground="#E8E8E8" Margin="0,0,0,10"/>
+                                <Label Content="Private Profile" FontSize="14" FontWeight="Bold" Foreground="#1A1A1A" Margin="0,0,0,10"/>
                                 <Grid>
                                     <Grid.ColumnDefinitions><ColumnDefinition Width="160"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
                                     <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/></Grid.RowDefinitions>
@@ -596,7 +596,7 @@ It offers a centralized view of the security configuration, log files, updates, 
                         
                         <Border Grid.Column="0" Grid.Row="1" Style="{StaticResource SectionBorder}">
                             <StackPanel>
-                                <Label Content="Public Profile" FontSize="14" FontWeight="Bold" Foreground="#E8E8E8" Margin="0,0,0,10"/>
+                                <Label Content="Public Profile" FontSize="14" FontWeight="Bold" Foreground="#1A1A1A" Margin="0,0,0,10"/>
                                 <Grid>
                                     <Grid.ColumnDefinitions><ColumnDefinition Width="160"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
                                     <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/></Grid.RowDefinitions>
@@ -614,7 +614,7 @@ It offers a centralized view of the security configuration, log files, updates, 
                         
                         <Border Grid.Column="1" Grid.Row="1" Style="{StaticResource SectionBorder}">
                             <StackPanel>
-                                <Label Content="Firewall Rules" FontSize="14" FontWeight="Bold" Foreground="#E8E8E8" Margin="0,0,0,10"/>
+                                <Label Content="Firewall Rules" FontSize="14" FontWeight="Bold" Foreground="#1A1A1A" Margin="0,0,0,10"/>
                                 <TextBlock Text="View and filter Windows Firewall rules." TextWrapping="Wrap" Margin="0,0,0,15" FontFamily="Segoe UI" Foreground="#666"/>
                                 <Button Name="btnShowFirewallRules" Content="Show Firewall Rules" Style="{StaticResource ActionButton}" Width="180"/>
                             </StackPanel>
@@ -622,7 +622,7 @@ It offers a centralized view of the security configuration, log files, updates, 
 
                         <Border Grid.Column="0" Grid.ColumnSpan="2" Grid.Row="2" Style="{StaticResource SectionBorder}">
                             <StackPanel>
-                                <Label Content="Firewall Logs" FontSize="14" FontWeight="Bold" Foreground="#E8E8E8" Margin="0,0,0,10"/>
+                                <Label Content="Firewall Logs" FontSize="14" FontWeight="Bold" Foreground="#1A1A1A" Margin="0,0,0,10"/>
                                 <TextBlock Text="View the Windows Firewall log file (pfirewall.log). Logging must be enabled via Windows Firewall with Advanced Security settings." TextWrapping="Wrap" Margin="0,0,0,15" FontFamily="Segoe UI" Foreground="#666"/>
                                 <WrapPanel>
                                     <Button Name="btnShowFirewallLogs" Content="Show Firewall Logs" Style="{StaticResource ActionButton}" Width="180"/>
@@ -655,7 +655,7 @@ It offers a centralized view of the security configuration, log files, updates, 
                         <!-- Troubleshooting Mode Status -->
                         <Border Grid.Row="1" Style="{StaticResource SectionBorder}">
                             <StackPanel>
-                                <Label Content="Troubleshooting Mode Status" FontSize="14" FontWeight="Bold" Foreground="#E8E8E8" Margin="0,0,0,10"/>
+                                <Label Content="Troubleshooting Mode Status" FontSize="14" FontWeight="Bold" Foreground="#1A1A1A" Margin="0,0,0,10"/>
                                 <Grid>
                                     <Grid.ColumnDefinitions>
                                         <ColumnDefinition Width="230"/>
@@ -697,7 +697,7 @@ It offers a centralized view of the security configuration, log files, updates, 
                         <!-- Tamper Protection -->
                         <Border Grid.Row="2" Style="{StaticResource SectionBorder}">
                             <StackPanel>
-                                <Label Content="Tamper Protection" FontSize="14" FontWeight="Bold" Foreground="#E8E8E8" Margin="0,0,0,10"/>
+                                <Label Content="Tamper Protection" FontSize="14" FontWeight="Bold" Foreground="#1A1A1A" Margin="0,0,0,10"/>
                                 <TextBlock Text="Disable Tamper Protection on this device. This allows policy changes that would otherwise be blocked. Use only for troubleshooting purposes." TextWrapping="Wrap" Margin="0,0,0,15" FontFamily="Segoe UI" Foreground="#666"/>
                                 <WrapPanel>
                                     <Button Name="btnDisableTamperProtection" Content="Disable Tamper Protection" Style="{StaticResource ActionButton}" Width="230"/>
@@ -709,7 +709,7 @@ It offers a centralized view of the security configuration, log files, updates, 
                         <!-- Performance Tuning -->
                         <Border Grid.Row="3" Style="{StaticResource SectionBorder}">
                             <StackPanel>
-                                <Label Content="Performance Tuning" FontSize="14" FontWeight="Bold" Foreground="#E8E8E8" Margin="0,0,0,10"/>
+                                <Label Content="Performance Tuning" FontSize="14" FontWeight="Bold" Foreground="#1A1A1A" Margin="0,0,0,10"/>
                                 <TextBlock Text="Apply settings to reduce scan overhead and CPU impact. Lowers cloud block level, CPU load factor, disables network file scanning, file hash computation, and PUA protection." TextWrapping="Wrap" Margin="0,0,0,15" FontFamily="Segoe UI" Foreground="#666"/>
                                 <WrapPanel>
                                     <Button Name="btnPerfTuning" Content="Apply Performance Tuning" Style="{StaticResource ActionButton}" Width="230"/>
@@ -721,7 +721,7 @@ It offers a centralized view of the security configuration, log files, updates, 
                         <!-- Full Protection Disable -->
                         <Border Grid.Row="4" Style="{StaticResource SectionBorder}">
                             <StackPanel>
-                                <Label Content="Full Protection Disable" FontSize="14" FontWeight="Bold" Foreground="#E8E8E8" Margin="0,0,0,10"/>
+                                <Label Content="Full Protection Disable" FontSize="14" FontWeight="Bold" Foreground="#1A1A1A" Margin="0,0,0,10"/>
                                 <TextBlock Text="Disable all major real-time protection components: real-time monitoring, behavior monitoring, block at first seen, IOAV protection, and network protection." TextWrapping="Wrap" Margin="0,0,0,15" FontFamily="Segoe UI" Foreground="#666"/>
                                 <WrapPanel>
                                     <Button Name="btnFullProtectionDisable" Content="Disable Full Protection" Style="{StaticResource ActionButton}" Width="230"/>
@@ -738,7 +738,7 @@ It offers a centralized view of the security configuration, log files, updates, 
                     <Grid Margin="10">
                         <Border Style="{StaticResource SectionBorder}">
                             <StackPanel>
-                                <Label Content="MDE Connectivity Test" FontSize="14" FontWeight="Bold" Foreground="#E8E8E8" Margin="0,0,0,10"/>
+                                <Label Content="MDE Connectivity Test" FontSize="14" FontWeight="Bold" Foreground="#1A1A1A" Margin="0,0,0,10"/>
                                 <TextBlock Text="Test TCP port 443 connectivity to key Microsoft Defender for Endpoint cloud service endpoints." TextWrapping="Wrap" Margin="0,0,0,15" FontFamily="Segoe UI" Foreground="#666"/>
                                 <WrapPanel>
                                     <Button Name="btnTestConnectivity" Content="Test MDE Connectivity" Style="{StaticResource ActionButton}" Width="220"/>
